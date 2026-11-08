@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
+import { StreakChip } from '@/components/crossover/streak-chip';
 
 export function usePageMeta(title: string, description: string) {
   useEffect(() => {
@@ -30,7 +31,7 @@ function NavLink({ href, children }: { href: string; children: ReactNode }) {
       href={href}
       data-testid={`link-nav-${href === '/' ? 'home' : href.slice(1)}`}
       aria-current={active ? 'page' : undefined}
-      className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+      className={`rounded-full px-2.5 py-1.5 text-[13px] font-medium min-[400px]:px-3 transition-colors ${
         active ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
       }`}
     >
@@ -44,16 +45,18 @@ export function Shell({ children }: { children: ReactNode }) {
     <div className="relative min-h-[100dvh] bg-background">
       <div className="glow-bg" aria-hidden />
       <div className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-[430px] flex-col px-4">
-        <header className="sticky top-0 z-20 -mx-4 flex items-center justify-between bg-background/80 px-4 py-3 backdrop-blur-md">
+        <header className="sticky top-0 z-20 -mx-4 flex items-center gap-2 bg-background/80 px-4 py-3 backdrop-blur-md">
           <Link href="/" data-testid="link-logo" className="flex items-center gap-2 rounded-full">
             <span className="grad-accent relative grid h-8 w-8 place-items-center rounded-full" aria-hidden>
               <span className="absolute h-[2px] w-5 rotate-45 rounded bg-background" />
               <span className="absolute h-[2px] w-5 -rotate-45 rounded bg-background" />
             </span>
-            <span className="text-lg font-bold tracking-tight">Crossover</span>
+            <span className="sr-only text-lg font-bold tracking-tight min-[410px]:not-sr-only">Crossover</span>
           </Link>
-          <nav aria-label="Main" className="flex gap-1">
+          <StreakChip />
+          <nav aria-label="Main" className="ml-auto flex gap-0.5">
             <NavLink href="/">Home</NavLink>
+            <NavLink href="/connections">Connections</NavLink>
             <NavLink href="/history">History</NavLink>
           </nav>
         </header>
@@ -64,6 +67,7 @@ export function Shell({ children }: { children: ReactNode }) {
           </p>
           <div className="mt-3 flex gap-4">
             <Link href="/" className="underline-offset-4 hover:text-foreground hover:underline" data-testid="link-footer-home">Home</Link>
+            <Link href="/connections" className="underline-offset-4 hover:text-foreground hover:underline" data-testid="link-footer-connections">Connections</Link>
             <Link href="/history" className="underline-offset-4 hover:text-foreground hover:underline" data-testid="link-footer-history">History</Link>
           </div>
         </footer>

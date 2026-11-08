@@ -9,6 +9,137 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Every saved Connect and Super Connect in this anonymous session
+ */
+export const getCrossoverConnectionsResponseConnectionsItemVisitorProfileOneFirstNameMax = 100;
+
+export const getCrossoverConnectionsResponseConnectionsItemVisitorProfileOneSchoolMax = 150;
+
+export const getCrossoverConnectionsResponseConnectionsItemVisitorProfileOneMajorMax = 150;
+
+export const getCrossoverConnectionsResponseConnectionsItemVisitorProfileOneYearMax = 100;
+
+export const getCrossoverConnectionsResponseConnectionsItemVisitorProfileOneCareerGoalsMax = 600;
+
+export const getCrossoverConnectionsResponseConnectionsItemVisitorProfileOneInterestsItemMax = 100;
+
+export const getCrossoverConnectionsResponseConnectionsItemVisitorProfileOneInterestsMax = 12;
+
+export const getCrossoverConnectionsResponseConnectionsItemMatchScoreMin = 0;
+export const getCrossoverConnectionsResponseConnectionsItemMatchScoreMax = 100;
+
+export const getCrossoverConnectionsResponseConnectionsItemIcebreakerMax = 299;
+
+export const getCrossoverConnectionsResponseRemainingBuildsMin = 0;
+export const getCrossoverConnectionsResponseRemainingBuildsMax = 5;
+
+
+
+export const GetCrossoverConnectionsResponse = zod.object({
+  "connections": zod.array(zod.object({
+  "id": zod.number().int(),
+  "deck_id": zod.string(),
+  "profile": zod.object({
+  "id": zod.number().int(),
+  "first_name": zod.string(),
+  "school": zod.string(),
+  "major": zod.string(),
+  "year": zod.string(),
+  "headline": zod.string(),
+  "career_goals": zod.string(),
+  "interests": zod.array(zod.string()),
+  "ask_me_about": zod.string(),
+  "is_sample": zod.boolean()
+}),
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(getCrossoverConnectionsResponseConnectionsItemVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(getCrossoverConnectionsResponseConnectionsItemVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(getCrossoverConnectionsResponseConnectionsItemVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(getCrossoverConnectionsResponseConnectionsItemVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(getCrossoverConnectionsResponseConnectionsItemVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(getCrossoverConnectionsResponseConnectionsItemVisitorProfileOneInterestsItemMax)).max(getCrossoverConnectionsResponseConnectionsItemVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "match_score": zod.number().int().min(getCrossoverConnectionsResponseConnectionsItemMatchScoreMin).max(getCrossoverConnectionsResponseConnectionsItemMatchScoreMax),
+  "why_connect": zod.string(),
+  "icebreaker": zod.string().max(getCrossoverConnectionsResponseConnectionsItemIcebreakerMax),
+  "direction": zod.enum(['right', 'super']),
+  "created_at": zod.string()
+})),
+  "remaining_builds": zod.number().int().min(getCrossoverConnectionsResponseRemainingBuildsMin).max(getCrossoverConnectionsResponseRemainingBuildsMax)
+})
+
+
+/**
+ * @summary Save a manually edited draft without AI
+ */
+
+
+
+export const EditCrossoverIcebreakerParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const editCrossoverIcebreakerBodyIcebreakerMax = 299;
+
+
+
+export const EditCrossoverIcebreakerBody = zod.object({
+  "icebreaker": zod.string().min(1).max(editCrossoverIcebreakerBodyIcebreakerMax)
+})
+
+export const editCrossoverIcebreakerResponseVisitorProfileOneFirstNameMax = 100;
+
+export const editCrossoverIcebreakerResponseVisitorProfileOneSchoolMax = 150;
+
+export const editCrossoverIcebreakerResponseVisitorProfileOneMajorMax = 150;
+
+export const editCrossoverIcebreakerResponseVisitorProfileOneYearMax = 100;
+
+export const editCrossoverIcebreakerResponseVisitorProfileOneCareerGoalsMax = 600;
+
+export const editCrossoverIcebreakerResponseVisitorProfileOneInterestsItemMax = 100;
+
+export const editCrossoverIcebreakerResponseVisitorProfileOneInterestsMax = 12;
+
+export const editCrossoverIcebreakerResponseMatchScoreMin = 0;
+export const editCrossoverIcebreakerResponseMatchScoreMax = 100;
+
+export const editCrossoverIcebreakerResponseIcebreakerMax = 299;
+
+
+
+export const EditCrossoverIcebreakerResponse = zod.object({
+  "id": zod.number().int(),
+  "deck_id": zod.string(),
+  "profile": zod.object({
+  "id": zod.number().int(),
+  "first_name": zod.string(),
+  "school": zod.string(),
+  "major": zod.string(),
+  "year": zod.string(),
+  "headline": zod.string(),
+  "career_goals": zod.string(),
+  "interests": zod.array(zod.string()),
+  "ask_me_about": zod.string(),
+  "is_sample": zod.boolean()
+}),
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(editCrossoverIcebreakerResponseVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(editCrossoverIcebreakerResponseVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(editCrossoverIcebreakerResponseVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(editCrossoverIcebreakerResponseVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(editCrossoverIcebreakerResponseVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(editCrossoverIcebreakerResponseVisitorProfileOneInterestsItemMax)).max(editCrossoverIcebreakerResponseVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "match_score": zod.number().int().min(editCrossoverIcebreakerResponseMatchScoreMin).max(editCrossoverIcebreakerResponseMatchScoreMax),
+  "why_connect": zod.string(),
+  "icebreaker": zod.string().max(editCrossoverIcebreakerResponseIcebreakerMax),
+  "direction": zod.enum(['right', 'super']),
+  "created_at": zod.string()
+})
+
+
+/**
  * @summary Save profile edits to this session without changing the deck or using AI
  */
 
@@ -92,6 +223,8 @@ export const updateCrossoverProfileResponseVisitorProfileOneInterestsMax = 12;
 export const updateCrossoverProfileResponseSuperConnectsLeftMin = 0;
 export const updateCrossoverProfileResponseSuperConnectsLeftMax = 3;
 
+export const updateCrossoverProfileResponseDeckSummaryConnectionsMadeMin = 0;
+
 
 
 export const UpdateCrossoverProfileResponse = zod.object({
@@ -137,7 +270,11 @@ export const UpdateCrossoverProfileResponse = zod.object({
   "direction": zod.enum(['left', 'right', 'super']),
   "created_at": zod.string()
 })),
-  "super_connects_left": zod.number().int().min(updateCrossoverProfileResponseSuperConnectsLeftMin).max(updateCrossoverProfileResponseSuperConnectsLeftMax)
+  "super_connects_left": zod.number().int().min(updateCrossoverProfileResponseSuperConnectsLeftMin).max(updateCrossoverProfileResponseSuperConnectsLeftMax),
+  "deck_summary": zod.object({
+  "connections_made": zod.number().int().min(updateCrossoverProfileResponseDeckSummaryConnectionsMadeMin),
+  "top_shared_interest": zod.string().nullable()
+})
 })
 
 
@@ -203,6 +340,8 @@ export const confirmCrossoverProfileResponseVisitorProfileOneInterestsMax = 12;
 export const confirmCrossoverProfileResponseSuperConnectsLeftMin = 0;
 export const confirmCrossoverProfileResponseSuperConnectsLeftMax = 3;
 
+export const confirmCrossoverProfileResponseDeckSummaryConnectionsMadeMin = 0;
+
 
 
 export const ConfirmCrossoverProfileResponse = zod.object({
@@ -248,7 +387,11 @@ export const ConfirmCrossoverProfileResponse = zod.object({
   "direction": zod.enum(['left', 'right', 'super']),
   "created_at": zod.string()
 })),
-  "super_connects_left": zod.number().int().min(confirmCrossoverProfileResponseSuperConnectsLeftMin).max(confirmCrossoverProfileResponseSuperConnectsLeftMax)
+  "super_connects_left": zod.number().int().min(confirmCrossoverProfileResponseSuperConnectsLeftMin).max(confirmCrossoverProfileResponseSuperConnectsLeftMax),
+  "deck_summary": zod.object({
+  "connections_made": zod.number().int().min(confirmCrossoverProfileResponseDeckSummaryConnectionsMadeMin),
+  "top_shared_interest": zod.string().nullable()
+})
 })
 
 
@@ -317,6 +460,8 @@ export const createCrossoverSwipeResponseVisitorProfileOneInterestsMax = 12;
 export const createCrossoverSwipeResponseSuperConnectsLeftMin = 0;
 export const createCrossoverSwipeResponseSuperConnectsLeftMax = 3;
 
+export const createCrossoverSwipeResponseDeckSummaryConnectionsMadeMin = 0;
+
 
 
 export const CreateCrossoverSwipeResponse = zod.object({
@@ -362,7 +507,11 @@ export const CreateCrossoverSwipeResponse = zod.object({
   "direction": zod.enum(['left', 'right', 'super']),
   "created_at": zod.string()
 })),
-  "super_connects_left": zod.number().int().min(createCrossoverSwipeResponseSuperConnectsLeftMin).max(createCrossoverSwipeResponseSuperConnectsLeftMax)
+  "super_connects_left": zod.number().int().min(createCrossoverSwipeResponseSuperConnectsLeftMin).max(createCrossoverSwipeResponseSuperConnectsLeftMax),
+  "deck_summary": zod.object({
+  "connections_made": zod.number().int().min(createCrossoverSwipeResponseDeckSummaryConnectionsMadeMin),
+  "top_shared_interest": zod.string().nullable()
+})
 })
 
 
@@ -430,6 +579,8 @@ export const undoCrossoverSwipeResponseVisitorProfileOneInterestsMax = 12;
 export const undoCrossoverSwipeResponseSuperConnectsLeftMin = 0;
 export const undoCrossoverSwipeResponseSuperConnectsLeftMax = 3;
 
+export const undoCrossoverSwipeResponseDeckSummaryConnectionsMadeMin = 0;
+
 
 
 export const UndoCrossoverSwipeResponse = zod.object({
@@ -475,7 +626,11 @@ export const UndoCrossoverSwipeResponse = zod.object({
   "direction": zod.enum(['left', 'right', 'super']),
   "created_at": zod.string()
 })),
-  "super_connects_left": zod.number().int().min(undoCrossoverSwipeResponseSuperConnectsLeftMin).max(undoCrossoverSwipeResponseSuperConnectsLeftMax)
+  "super_connects_left": zod.number().int().min(undoCrossoverSwipeResponseSuperConnectsLeftMin).max(undoCrossoverSwipeResponseSuperConnectsLeftMax),
+  "deck_summary": zod.object({
+  "connections_made": zod.number().int().min(undoCrossoverSwipeResponseDeckSummaryConnectionsMadeMin),
+  "top_shared_interest": zod.string().nullable()
+})
 })
 
 
@@ -563,8 +718,10 @@ export const BuildCrossoverDeckResponse = zod.object({
 
 
 
+
 export const RewriteCrossoverIcebreakerBody = zod.object({
-  "profile_id": zod.number().int().min(1)
+  "profile_id": zod.number().int().min(1),
+  "connection_id": zod.number().int().min(1).optional()
 })
 
 export const rewriteCrossoverIcebreakerResponseIcebreakerMax = 299;
@@ -577,7 +734,8 @@ export const rewriteCrossoverIcebreakerResponseRemainingBuildsMax = 5;
 export const RewriteCrossoverIcebreakerResponse = zod.object({
   "profile_id": zod.number().int(),
   "icebreaker": zod.string().min(1).max(rewriteCrossoverIcebreakerResponseIcebreakerMax),
-  "remaining_builds": zod.number().int().min(rewriteCrossoverIcebreakerResponseRemainingBuildsMin).max(rewriteCrossoverIcebreakerResponseRemainingBuildsMax)
+  "remaining_builds": zod.number().int().min(rewriteCrossoverIcebreakerResponseRemainingBuildsMin).max(rewriteCrossoverIcebreakerResponseRemainingBuildsMax),
+  "connection_id": zod.number().int().nullish()
 })
 
 
@@ -636,6 +794,8 @@ export const getCrossoverStateResponseVisitorProfileOneInterestsMax = 12;
 export const getCrossoverStateResponseSuperConnectsLeftMin = 0;
 export const getCrossoverStateResponseSuperConnectsLeftMax = 3;
 
+export const getCrossoverStateResponseDeckSummaryConnectionsMadeMin = 0;
+
 
 
 export const GetCrossoverStateResponse = zod.object({
@@ -681,7 +841,11 @@ export const GetCrossoverStateResponse = zod.object({
   "direction": zod.enum(['left', 'right', 'super']),
   "created_at": zod.string()
 })),
-  "super_connects_left": zod.number().int().min(getCrossoverStateResponseSuperConnectsLeftMin).max(getCrossoverStateResponseSuperConnectsLeftMax)
+  "super_connects_left": zod.number().int().min(getCrossoverStateResponseSuperConnectsLeftMin).max(getCrossoverStateResponseSuperConnectsLeftMax),
+  "deck_summary": zod.object({
+  "connections_made": zod.number().int().min(getCrossoverStateResponseDeckSummaryConnectionsMadeMin),
+  "top_shared_interest": zod.string().nullable()
+})
 })
 
 

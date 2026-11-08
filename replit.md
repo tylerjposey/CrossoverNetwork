@@ -15,6 +15,8 @@ Crossover is a mobile-first career networking website with fictional sample peop
 - Required env for AI: `ANTHROPIC_API_KEY` — direct official Anthropic SDK, server only
 - `pnpm --filter @workspace/api-server run test:phase2` — isolated PostgreSQL and fixture-provider tests; no paid AI calls
 - `pnpm --filter @workspace/api-server run test:phase3` — isolated profile/deck/swipe/undo persistence checks; no paid AI calls
+- `pnpm --filter @workspace/api-server run test:phase4` — isolated connection/draft/undo/rewrite checks; no paid AI calls
+- `TZ=America/Los_Angeles node artifacts/crossover/tests/streak.ts` — defensive local streak and daylight-saving checks
 
 ## Stack
 
@@ -35,6 +37,7 @@ Crossover is a mobile-first career networking website with fictional sample peop
 - `artifacts/api-server/src/lib/matchmaking/config.ts` — single global daily cap constant (200), model and time/token budgets
 - `artifacts/api-server/src/lib/matchmaking` — provider, prompt, schema checks and atomic quota reservations
 - `artifacts/api-server/src/lib/deck-store.ts` — authoritative deck order, profile edits, swipe progress and undo
+- `artifacts/api-server/src/lib/connection-store.ts` — session-wide connections and saved drafts, including earlier decks
 
 ## Architecture decisions
 
@@ -47,7 +50,7 @@ Crossover is a mobile-first career networking website with fictional sample peop
 
 ## Product
 
-Phases 1–3 provide fictional profiles, public redacted history, AI endpoints, onboarding, editable parsed cards and a persistent swipe deck with three Super Connects and undo. Connection screens, the Connections tab, deck-complete statistics and streaks remain in Phase 4.
+Phases 1–4 provide fictional profiles, public redacted history, AI endpoints, onboarding, editable parsed cards, persistent swipes and undo, connection celebrations, session-wide Connections, saved/copyable/rewritable drafts, a real deck summary and a defensive local opening streak. The main routes are `/`, `/connections` and `/history`. Phase 5 launch checks remain subject to approval.
 
 ## User preferences
 

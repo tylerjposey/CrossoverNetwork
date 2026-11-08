@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { ConnectionStore } from "../connection-store";
+import { DeckActionError } from "../deck-store";
 import { BuildCrossoverDeckBody, RewriteCrossoverIcebreakerBody } from "@workspace/api-zod";
 import type { Profile } from "@workspace/db";
 import { z } from "zod";
@@ -131,7 +133,15 @@ export class MatchmakingService {
     const session = await this.store.session(sessionId);
     const deck = resultSchema.safeParse(session.deck);
     const id = parsed.success ? parsed.data.profile_id : -1;
-    const match = deck.success ? deck.data.matches.find((m) => m.profile_id === id) : undefined;
+    const connections = new ConnectionStore(this.store.database);
+    const connectionId = parsed.success ? parsed.data.connection_id : undefined;
+    const connection = connectionId !== undefined ? await connections.get(sessionId, connectionId).catch((error) => {
+      if (error instanceof DeckActionError) return undefined;
+      throw error;
+    }) : undefined;
+    const match = connectionId !== undefined
+      ? connection && connection.profile.id === id ? connection : undefined
+      : deck.success ? deck.data.matches.find((m) => m.profile_id === id) : undefined;
     const person = people.find((p) => p.id === id);
     const text = `Rewrite icebreaker for profile ${id}`;
     if (!parsed.success || !match || !person) {
@@ -141,26 +151,22 @@ export class MatchmakingService {
     await this.reserve(sessionId, "rewrite", text);
     try {
       const response = await this.call(REWRITE_SYSTEM, taggedData("rewrite_context", {
-        visitor_profile: session.edited_profile ?? (deck.success ? deck.data.visitor_profile : null),
+        visitor_profile: connection && connection.deck_id !== session.deck_id
+          ? connection.visitor_profile : session.edited_profile ?? (deck.success ? deck.data.visitor_profile : null),
         person, why_connect: match.why_connect, previous_icebreaker: match.icebreaker,
       }), REWRITE_MAX_TOKENS, Date.now() + ATTEMPT_TIMEOUT_MS);
       if (response.stopReason !== "end_turn") throw new Error("Incomplete rewrite response");
       const draft = z.object({ icebreaker: z.string().trim().min(1).max(299) }).strict().parse(JSON.parse(response.text));
-      // JSONB update only the matching draft, avoiding clobbering a newer deck,
-      // other concurrent rewrites, or edits stored elsewhere in the session.
-      await this.store.database.query(
-        `UPDATE sessions SET data = jsonb_set(data, '{deck,matches}', (
-          SELECT jsonb_agg(CASE WHEN (m->>'profile_id')::int=$2
-            THEN jsonb_set(m,'{icebreaker}',to_jsonb($3::text)) ELSE m END ORDER BY ordinal)
-          FROM jsonb_array_elements(data->'deck'->'matches') WITH ORDINALITY AS e(m,ordinal)
-        )) WHERE id=$1 AND data->>'deck_id'=$4`,
-        [sessionId, id, draft.icebreaker, session.deck_id],
-      );
+      await connections.persistDraft(sessionId, id, draft.icebreaker,
+        connection?.deck_id ?? String(session.deck_id), connectionId);
       await this.store.log(sessionId, text, "success", { kind: "rewrite", profile_id: id, icebreaker: draft.icebreaker });
-      return { profile_id: id, icebreaker: draft.icebreaker, remaining_builds: await this.store.remaining(sessionId) };
+      return { profile_id: id, icebreaker: draft.icebreaker, remaining_builds: await this.store.remaining(sessionId), connection_id: connectionId ?? null };
     } catch (error) {
       this.reportError({ stage: "rewrite_failed", ...errorMetadata(error) });
       await this.store.log(sessionId, text, "error", { kind: "rewrite", reason: AI_BREAK_MESSAGE });
+      if (error instanceof DeckActionError) {
+        throw new AiActionError(400, "invalid_profile", "That connection changed. Refresh your Connections and try again.");
+      }
       throw new AiActionError(503, "ai_unavailable", AI_BREAK_MESSAGE);
     }
   }

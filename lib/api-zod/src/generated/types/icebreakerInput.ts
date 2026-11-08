@@ -9,4 +9,6 @@
 export interface IcebreakerInput {
   /** @minimum 1 */
   profile_id: number;
+  /** @minimum 1 */
+  connection_id?: number;
 }

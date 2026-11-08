@@ -5,9 +5,33 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-export interface DeckReference {
-  /** @minLength 1 */
-  deck_id: string;
+export interface IcebreakerEdit {
+  /**
+     * @minLength 1
+     * @maxLength 299
+     */
+  icebreaker: string;
+}
+
+export type ConnectionDirection = typeof ConnectionDirection[keyof typeof ConnectionDirection];
+
+
+export const ConnectionDirection = {
+  right: 'right',
+  super: 'super',
+} as const;
+
+export interface SampleProfile {
+  id: number;
+  first_name: string;
+  school: string;
+  major: string;
+  year: string;
+  headline: string;
+  career_goals: string;
+  interests: string[];
+  ask_me_about: string;
+  is_sample: boolean;
 }
 
 export interface VisitorProfile {
@@ -38,6 +62,44 @@ export interface VisitorProfile {
      * @items.maxLength 100
      */
   interests: string[];
+}
+
+export interface Connection {
+  id: number;
+  deck_id: string;
+  profile: SampleProfile;
+  visitor_profile: VisitorProfile | null;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  match_score: number;
+  why_connect: string;
+  /** @maxLength 299 */
+  icebreaker: string;
+  direction: ConnectionDirection;
+  created_at: string;
+}
+
+export interface ConnectionList {
+  connections: Connection[];
+  /**
+     * @minimum 0
+     * @maximum 5
+     */
+  remaining_builds: number;
+}
+
+export interface DeckSummary {
+  /** @minimum 0 */
+  connections_made: number;
+  /** @nullable */
+  top_shared_interest: string | null;
+}
+
+export interface DeckReference {
+  /** @minLength 1 */
+  deck_id: string;
 }
 
 export interface ProfileEdit {
@@ -168,6 +230,8 @@ export interface DeckBuild {
 export interface IcebreakerInput {
   /** @minimum 1 */
   profile_id: number;
+  /** @minimum 1 */
+  connection_id?: number;
 }
 
 export interface IcebreakerDraft {
@@ -182,6 +246,8 @@ export interface IcebreakerDraft {
      * @maximum 5
      */
   remaining_builds: number;
+  /** @nullable */
+  connection_id?: number | null;
 }
 
 export interface VisitorState {
@@ -203,6 +269,7 @@ export interface VisitorState {
      * @maximum 3
      */
   super_connects_left: number;
+  deck_summary: DeckSummary;
 }
 
 export type ActionErrorCode = typeof ActionErrorCode[keyof typeof ActionErrorCode];
@@ -225,19 +292,6 @@ export interface ActionError {
      * @maximum 5
      */
   remaining_builds: number;
-}
-
-export interface SampleProfile {
-  id: number;
-  first_name: string;
-  school: string;
-  major: string;
-  year: string;
-  headline: string;
-  career_goals: string;
-  interests: string[];
-  ask_me_about: string;
-  is_sample: boolean;
 }
 
 export type HistoryRecordStatus = typeof HistoryRecordStatus[keyof typeof HistoryRecordStatus];

@@ -3,6 +3,7 @@ import { animate, motion, useMotionValue, useReducedMotion, useTransform, type P
 import { X, Star, Heart, Undo2, Compass, UserRound, PenLine } from 'lucide-react';
 import type { SampleProfile, VisitorState } from '@workspace/api-client-react';
 import { MatchCard } from '@/components/crossover/match-card';
+import { DeckComplete } from '@/components/crossover/deck-complete';
 
 type Dir = 'left' | 'right' | 'super';
 
@@ -149,16 +150,8 @@ export function SwipeDeck({
           </div>
         </>
       ) : (
-        <div className="rise mt-6 rounded-[28px] border border-card-border bg-card p-6 text-center" data-testid="status-deck-complete">
-          <div className="grad-accent mx-auto grid h-14 w-14 place-items-center rounded-full text-[hsl(250_30%_8%)]"><Heart className="h-6 w-6" fill="currentColor" aria-hidden /></div>
-          <h2 className="mt-4 text-2xl font-extrabold">All cards reviewed</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Changed your mind on the last one? Undo it, or edit your input to build a fresh deck.</p>
-          {error && <p role="alert" className="mt-3 rounded-2xl bg-[hsl(352_85%_62%/.14)] p-3 text-sm text-[hsl(352_90%_82%)]">{error}</p>}
-          <div className="mt-5 flex gap-2">
-            <button type="button" onClick={onUndo} disabled={!last || locked} data-testid="button-undo" className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full border border-border py-2.5 text-sm font-semibold disabled:opacity-50"><Undo2 className="h-4 w-4" aria-hidden />Undo</button>
-            <button type="button" onClick={onEditInput} data-testid="button-return-input" className="grad-accent flex-1 rounded-full py-2.5 text-sm font-bold text-[hsl(250_30%_8%)]">Edit my input</button>
-          </div>
-        </div>
+        <DeckComplete summary={state.deck_summary} remaining={state.remaining_builds} error={error}
+          canUndo={!!last && !locked} onUndo={onUndo} onNewDeck={onEditInput} />
       )}
     </section>
   );

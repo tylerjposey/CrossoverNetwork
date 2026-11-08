@@ -11,6 +11,40 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /crossover/connections:
+    get:
+      operationId: getCrossoverConnections
+      summary: Every saved Connect and Super Connect in this anonymous session
+      responses:
+        "200":
+          description: Session connections, newest first, including previous decks
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ConnectionList"}
+  /crossover/connections/{id}/icebreaker:
+    patch:
+      operationId: editCrossoverIcebreaker
+      summary: Save a manually edited draft without AI
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: integer, minimum: 1}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/IcebreakerEdit"}
+      responses:
+        "200":
+          description: Saved connection
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Connection"}
+        "400":
+          $ref: "#/components/responses/DeckActionError"
+        "409":
+          $ref: "#/components/responses/DeckActionError"
   /crossover/profile:
     patch:
       operationId: updateCrossoverProfile
@@ -184,6 +218,42 @@ components:
         application/json:
           schema: {$ref: "#/components/schemas/ActionError"}
   schemas:
+    IcebreakerEdit:
+      type: object
+      additionalProperties: false
+      required: [icebreaker]
+      properties:
+        icebreaker: {type: string, minLength: 1, maxLength: 299}
+    Connection:
+      type: object
+      required: [id, deck_id, profile, visitor_profile, match_score, why_connect, icebreaker, direction, created_at]
+      properties:
+        id: {type: integer}
+        deck_id: {type: string}
+        profile: {$ref: "#/components/schemas/SampleProfile"}
+        visitor_profile:
+          anyOf:
+            - {$ref: "#/components/schemas/VisitorProfile"}
+            - {type: "null"}
+        match_score: {type: integer, minimum: 0, maximum: 100}
+        why_connect: {type: string}
+        icebreaker: {type: string, maxLength: 299}
+        direction: {type: string, enum: [right, super]}
+        created_at: {type: string}
+    ConnectionList:
+      type: object
+      required: [connections, remaining_builds]
+      properties:
+        connections:
+          type: array
+          items: {$ref: "#/components/schemas/Connection"}
+        remaining_builds: {type: integer, minimum: 0, maximum: 5}
+    DeckSummary:
+      type: object
+      required: [connections_made, top_shared_interest]
+      properties:
+        connections_made: {type: integer, minimum: 0}
+        top_shared_interest: {type: [string, "null"]}
     DeckReference:
       type: object
       additionalProperties: false
@@ -296,6 +366,7 @@ components:
       required: [profile_id]
       properties:
         profile_id: {type: integer, minimum: 1}
+        connection_id: {type: integer, minimum: 1}
     IcebreakerDraft:
       type: object
       required: [profile_id, icebreaker, remaining_builds]
@@ -303,9 +374,10 @@ components:
         profile_id: {type: integer}
         icebreaker: {type: string, minLength: 1, maxLength: 299}
         remaining_builds: {type: integer, minimum: 0, maximum: 5}
+        connection_id: {type: [integer, "null"]}
     VisitorState:
       type: object
-      required: [input_text, remaining_builds, deck_id, deck, visitor_profile, profile_confirmed, deck_order, swipes, super_connects_left]
+      required: [input_text, remaining_builds, deck_id, deck, visitor_profile, profile_confirmed, deck_order, swipes, super_connects_left, deck_summary]
       properties:
         input_text: {type: string}
         remaining_builds: {type: integer, minimum: 0, maximum: 5}
@@ -326,6 +398,7 @@ components:
           type: array
           items: {$ref: "#/components/schemas/SavedSwipe"}
         super_connects_left: {type: integer, minimum: 0, maximum: 3}
+        deck_summary: {$ref: "#/components/schemas/DeckSummary"}
     ActionError:
       type: object
       required: [error, code, remaining_builds]

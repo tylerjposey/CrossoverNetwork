@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  Connection,
+  ConnectionList,
   DeckActionErrorResponse,
   DeckBuild,
   DeckInput,
@@ -28,6 +30,7 @@ import type {
   HealthStatus,
   HistoryPage,
   IcebreakerDraft,
+  IcebreakerEdit,
   IcebreakerInput,
   ProfileEdit,
   SampleProfile,
@@ -63,6 +66,172 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetCrossoverConnectionsUrl = () => {
+
+
+
+
+  return `/api/crossover/connections`
+}
+
+/**
+ * @summary Every saved Connect and Super Connect in this anonymous session
+ */
+export const getCrossoverConnections = async ( options?: Parameters<typeof customFetch>[1]): Promise<ConnectionList> => {
+
+  return customFetch<ConnectionList>(getGetCrossoverConnectionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCrossoverConnectionsQueryKey = () => {
+    return [
+    `/api/crossover/connections`
+    ] as const;
+    }
+
+
+export const getGetCrossoverConnectionsQueryOptions = <TData = Awaited<ReturnType<typeof getCrossoverConnections>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCrossoverConnections>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCrossoverConnectionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCrossoverConnections>>> = ({ signal }) => getCrossoverConnections({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCrossoverConnections>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCrossoverConnectionsQueryResult = NonNullable<Awaited<ReturnType<typeof getCrossoverConnections>>>
+export type GetCrossoverConnectionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Every saved Connect and Super Connect in this anonymous session
+ */
+
+export function useGetCrossoverConnections<TData = Awaited<ReturnType<typeof getCrossoverConnections>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCrossoverConnections>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCrossoverConnectionsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getEditCrossoverIcebreakerUrl = (id: number,) => {
+
+
+
+
+  return `/api/crossover/connections/${id}/icebreaker`
+}
+
+/**
+ * @summary Save a manually edited draft without AI
+ */
+export const editCrossoverIcebreaker = async (id: number,
+    icebreakerEdit: IcebreakerEdit, options?: Parameters<typeof customFetch>[1]): Promise<Connection> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Connection>(getEditCrossoverIcebreakerUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(icebreakerEdit)
+  }
+);}
+
+
+
+
+
+export const getEditCrossoverIcebreakerMutationKey = () => ['editCrossoverIcebreaker'] as const;
+
+export const getEditCrossoverIcebreakerMutationOptions = <TError = ErrorType<DeckActionErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof editCrossoverIcebreaker>>, TError,EditCrossoverIcebreakerMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof editCrossoverIcebreaker>>, TError,EditCrossoverIcebreakerMutationVariables, TContext> => {
+
+const mutationKey = getEditCrossoverIcebreakerMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof editCrossoverIcebreaker>>, EditCrossoverIcebreakerMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  editCrossoverIcebreaker(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EditCrossoverIcebreakerMutationResult = NonNullable<Awaited<ReturnType<typeof editCrossoverIcebreaker>>>
+    export type EditCrossoverIcebreakerMutationBody = BodyType<IcebreakerEdit>
+    export type EditCrossoverIcebreakerMutationError = ErrorType<DeckActionErrorResponse>
+    export type EditCrossoverIcebreakerMutationVariables = {id: number;data: BodyType<IcebreakerEdit>}
+
+    /**
+ * @summary Save a manually edited draft without AI
+ */
+export const useEditCrossoverIcebreaker = <TError = ErrorType<DeckActionErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof editCrossoverIcebreaker>>, TError,EditCrossoverIcebreakerMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof editCrossoverIcebreaker>>,
+        TError,
+        EditCrossoverIcebreakerMutationVariables,
+        TContext
+      > => {
+      return useMutation(getEditCrossoverIcebreakerMutationOptions(options));
+    }
 
 export const getUpdateCrossoverProfileUrl = () => {
 

@@ -31,21 +31,42 @@ export class DeckStore extends MatchmakingStore {
       session.edited_profile ?? session.visitor_profile ?? deck?.visitor_profile ?? null,
     );
     const { rows: swipes } = await database.query(
-      "SELECT id,profile_id,direction,created_at FROM swipes WHERE session_id=$1 AND deck_id=$2 ORDER BY id",
+      "SELECT id,profile_id,direction,created_at,match_snapshot FROM swipes WHERE session_id=$1 AND deck_id=$2 ORDER BY id",
       [sessionId, deckId],
     );
     const { rows: reservations } = await database.query(
       "SELECT COUNT(*)::int AS used FROM ai_requests WHERE session_id=$1 AND created_at > clock_timestamp()-interval '1 hour'",
       [sessionId],
     );
+    const connected = swipes.filter((s) => s.direction !== "left");
+    const { rows: people } = connected.length ? await database.query(
+      "SELECT id,interests FROM profiles WHERE id=ANY($1::int[])", [connected.map((s) => s.profile_id)],
+    ) : { rows: [] };
+    const shared = new Map<string, { label: string; count: number }>();
+    for (const swipe of connected) {
+      const visitorInterests = new Set<string>(
+        (swipe.match_snapshot?.visitor_profile?.interests ?? []).map((s: string) => s.trim().toLowerCase()),
+      );
+      const person = people.find((p) => p.id === swipe.profile_id);
+      for (const label of (person?.interests ?? []) as string[]) {
+        const key = label.trim().toLowerCase();
+        if (!visitorInterests.has(key)) continue;
+        const existing = shared.get(key);
+        shared.set(key, { label, count: (existing?.count ?? 0) + 1 });
+      }
+    }
+    const top = [...shared.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))[0];
     return GetCrossoverStateResponse.parse({
       input_text: typeof session.input_text === "string" ? session.input_text : "",
       remaining_builds: Math.max(0, VISITOR_HOURLY_AI_CAP - reservations[0].used),
       deck_id: deckId, deck, visitor_profile: profile.success ? profile.data : null,
       profile_confirmed: !!deckId && session.profile_confirmed_deck_id === deckId,
       deck_order: deck ? deckOrder(deck) : [],
-      swipes: swipes.map((row) => ({ ...row, created_at: row.created_at.toISOString() })),
+      swipes: swipes.map((row) => ({
+        id: row.id, profile_id: row.profile_id, direction: row.direction, created_at: row.created_at.toISOString(),
+      })),
       super_connects_left: Math.max(0, 3 - swipes.filter((s) => s.direction === "super").length),
+      deck_summary: { connections_made: connected.length, top_shared_interest: top?.label ?? null },
     });
   }
 

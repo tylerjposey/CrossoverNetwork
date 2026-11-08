@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { DeckSummary } from './deckSummary';
 import type { MatchmakingResult } from './matchmakingResult';
 import type { SavedSwipe } from './savedSwipe';
 import type { VisitorProfile } from './visitorProfile';
@@ -28,4 +29,5 @@ export interface VisitorState {
      * @maximum 3
      */
   super_connects_left: number;
+  deck_summary: DeckSummary;
 }

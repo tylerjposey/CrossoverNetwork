@@ -18,4 +18,6 @@ export interface IcebreakerDraft {
      * @maximum 5
      */
   remaining_builds: number;
+  /** @nullable */
+  connection_id?: number | null;
 }

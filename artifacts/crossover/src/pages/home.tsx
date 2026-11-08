@@ -3,7 +3,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetCrossoverState, getGetCrossoverStateQueryKey, useGetCrossoverProfiles, getGetCrossoverProfilesQueryKey,
   getGetCrossoverHistoryQueryKey, useBuildCrossoverDeck, useUpdateCrossoverProfile, useConfirmCrossoverProfile,
-  useCreateCrossoverSwipe, useUndoCrossoverSwipe, type VisitorProfile, type VisitorState,
+  useCreateCrossoverSwipe, useUndoCrossoverSwipe, useGetCrossoverConnections, getGetCrossoverConnectionsQueryKey,
+  type Connection, type ConnectionList, type VisitorProfile, type VisitorState,
 } from '@workspace/api-client-react';
 import { ErrorCard, Shell, usePageMeta } from '@/components/crossover/shell';
 import { Onboarding } from '@/components/crossover/onboarding';
@@ -11,6 +12,8 @@ import { BuildLoading } from '@/components/crossover/build-loading';
 import { ProfileReview } from '@/components/crossover/profile-review';
 import { SwipeDeck } from '@/components/crossover/swipe-deck';
 import { apiErrorText, isConflict } from '@/lib/api-errors';
+import { Celebration } from '@/components/crossover/celebration';
+import { useToast } from '@/hooks/use-toast';
 
 type Mode = 'auto' | 'input' | 'profile';
 
@@ -36,6 +39,13 @@ export default function Home() {
   } });
   const state = stateQ.data;
   const profilesQ = useGetCrossoverProfiles({ query: { enabled: !!state, queryKey: getGetCrossoverProfilesQueryKey() } });
+
+  const connKey = getGetCrossoverConnectionsQueryKey();
+  const connQ = useGetCrossoverConnections({ query: { queryKey: connKey, enabled: !!state } });
+  const { toast } = useToast();
+  const [celebrate, setCelebrate] = useState<Connection | null>(null);
+  const announcement = useRef(0);
+  useEffect(() => () => { announcement.current++; }, []);
 
   const build = useBuildCrossoverDeck({ mutation: { retry: false } });
   const update = useUpdateCrossoverProfile();
@@ -87,15 +97,42 @@ export default function Home() {
   };
   const onSwipe = async (profile_id: number, direction: 'left' | 'right' | 'super') => {
     if (!state?.deck_id) return false;
+    const token = ++announcement.current;
+    const alreadySaved = state.swipes.some((s) => s.profile_id === profile_id);
     setDeckErr(null);
-    try { put(await swipe.mutateAsync({ data: { deck_id: state.deck_id, profile_id, direction } })); return true; }
+    let next: VisitorState;
+    try { next = await swipe.mutateAsync({ data: { deck_id: state.deck_id, profile_id, direction } }); put(next); }
     catch (e) { handle(e, setDeckErr); return false; }
+    if (direction !== 'left' && !alreadySaved) await announce(next, profile_id, direction, token);
+    return true;
+  };
+  const announce = async (next: VisitorState, profile_id: number, direction: 'right' | 'super', token: number) => {
+    const sw = [...next.swipes].reverse().find((x) => x.profile_id === profile_id && x.direction === direction);
+    await qc.invalidateQueries({ queryKey: connKey });
+    if (announcement.current !== token) return;
+    const list = qc.getQueryData<ConnectionList>(connKey);
+    let conn = list?.connections.find((c) => (sw ? c.id === sw.id : c.profile.id === profile_id && c.deck_id === next.deck_id));
+    const m = next.deck?.matches.find((x) => x.profile_id === profile_id);
+    const p = profilesQ.data?.find((x) => x.id === profile_id);
+    if (!conn && sw && m && p && next.deck_id) {
+      conn = { id: sw.id, deck_id: next.deck_id, profile: p, visitor_profile: next.visitor_profile, match_score: m.match_score,
+        why_connect: m.why_connect, icebreaker: m.icebreaker, direction, created_at: sw.created_at };
+    }
+    const score = conn?.match_score ?? m?.match_score ?? 0;
+    if (conn && (direction === 'super' || score >= 75)) setCelebrate(conn);
+    else toast({ title: `Connected with ${p?.first_name ?? 'them'}`, description: 'Saved to Connections with a draft icebreaker.' });
   };
   const onUndo = async () => {
+    announcement.current++;
     const last = state?.swipes[state.swipes.length - 1];
     if (!state?.deck_id || !last) return;
     setDeckErr(null);
-    try { put(await undo.mutateAsync({ data: { deck_id: state.deck_id, swipe_id: last.id } })); }
+    try {
+      put(await undo.mutateAsync({ data: { deck_id: state.deck_id, swipe_id: last.id } }));
+      qc.setQueryData<ConnectionList>(connKey, (o) => (o ? { ...o, connections: o.connections.filter((c) => c.id !== last.id) } : o));
+      if (celebrate?.id === last.id) setCelebrate(null);
+      void qc.invalidateQueries({ queryKey: connKey });
+    }
     catch (e) { handle(e, setDeckErr); }
   };
 
@@ -136,5 +173,6 @@ export default function Home() {
       </p>
     )}
     {body}
+    {celebrate && <Celebration connection={celebrate} remaining={state?.remaining_builds ?? null} onClose={() => setCelebrate(null)} />}
   </Shell>;
 }

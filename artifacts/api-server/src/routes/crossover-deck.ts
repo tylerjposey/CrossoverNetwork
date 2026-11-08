@@ -2,14 +2,29 @@ import { Router, type IRouter } from "express";
 import {
   UpdateCrossoverProfileBody, ConfirmCrossoverProfileBody,
   CreateCrossoverSwipeBody, UndoCrossoverSwipeBody,
+  EditCrossoverIcebreakerBody, EditCrossoverIcebreakerParams, EditCrossoverIcebreakerResponse,
 } from "@workspace/api-zod";
 import { DeckActionError, DeckStore } from "../lib/deck-store";
+import { ConnectionStore } from "../lib/connection-store";
 
 const router: IRouter = Router();
 const store = new DeckStore();
+const connections = new ConnectionStore();
 function check<T extends { success: boolean }>(parsed: T): asserts parsed is T & { success: true } {
   if (!parsed.success) throw new DeckActionError(400, "invalid_action", "Please check your details and try again.");
 }
+router.get("/crossover/connections", async (_req, res): Promise<void> => {
+  res.json(await connections.list(res.locals.sessionId));
+});
+router.patch("/crossover/connections/:id/icebreaker", async (req, res): Promise<void> => {
+  const params = EditCrossoverIcebreakerParams.safeParse(req.params);
+  const body = EditCrossoverIcebreakerBody.strict().safeParse(req.body);
+  check(params); check(body);
+  if (!body.data.icebreaker.trim()) throw new DeckActionError(400, "invalid_action", "Write a little something before saving your draft.");
+  res.json(EditCrossoverIcebreakerResponse.parse(await connections.edit(
+    res.locals.sessionId, params.data.id, body.data.icebreaker.trim(),
+  )));
+});
 router.patch("/crossover/profile", async (req, res): Promise<void> => {
   const parsed = UpdateCrossoverProfileBody.strict().safeParse(req.body);
   check(parsed);

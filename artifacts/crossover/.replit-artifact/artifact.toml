@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Crossover"
+description = "Mobile-first career networking across schools and disciplines, with fictional sample profiles and transparent public usage history."
+version = "1.0.0"
+id = "artifacts/crossover"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22401
+
+[services.development]
+run = "pnpm --filter @workspace/crossover run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/crossover", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/crossover/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22401"
+BASE_PATH = "/"

@@ -1,15 +1,17 @@
-# [Project name]
+# Crossover
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Crossover is a mobile-first career networking website with fictional sample people and a public, contact-redacted usage history.
 
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/crossover run dev` — run the Crossover frontend through its managed workflow
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
+- Required env: `SESSION_SECRET` — signs anonymous visitor cookies; never expose it to clients
 
 ## Stack
 
@@ -22,23 +24,31 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/crossover` — web frontend, mounted at `/`; public history at `/history`
+- `artifacts/api-server/src/routes/crossover.ts` — sample profiles and public history API
+- `artifacts/api-server/src/lib/seed.ts` — transactional empty-table startup data seeding
+- `lib/db/src/schema` — profiles, usage log, swipes and persistent anonymous sessions
+- `lib/api-spec/openapi.yaml` — source of truth for API types
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- No accounts or login: persistent anonymous sessions identify visitors only.
+- Startup seeds data, not schema. Replit Publish manages production schema changes.
+- Public history intentionally includes all visitors' records for cross-browser grading; redact contact information on the server.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Phase 1 provides a sample-people preview and public history with expandable inputs/results, status and sample badges. AI matching, onboarding, swiping and connections belong to subsequent approved phases.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Stop after each of the five approved phases and provide exact main-app/history URLs and testing steps.
+- Use direct server-side Anthropic access in the AI phase; do not silently substitute credit-billed AI access.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- History must never expose session identifiers or unredacted emails, phone numbers or URLs.
+- Sample usage entries are demonstrations, not actual AI requests, and must not consume AI quota.
 
 ## Pointers
 

@@ -11,6 +11,30 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /crossover/history:
+    get:
+      operationId: getCrossoverHistory
+      summary: Public redacted usage history
+      responses:
+        "200":
+          description: Newest first public records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistoryPage"
+  /crossover/profiles:
+    get:
+      operationId: getCrossoverProfiles
+      summary: Fictional sample people
+      responses:
+        "200":
+          description: Sample profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SampleProfile"
   /healthz:
     get:
       operationId: healthCheck
@@ -26,6 +50,51 @@ paths:
                 $ref: "#/components/schemas/HealthStatus"
 components:
   schemas:
+    SampleProfile:
+      type: object
+      required: [id, first_name, school, major, year, headline, career_goals, interests, ask_me_about, is_sample]
+      properties:
+        id: {type: integer}
+        first_name: {type: string}
+        school: {type: string}
+        major: {type: string}
+        year: {type: string}
+        headline: {type: string}
+        career_goals: {type: string}
+        interests:
+          type: array
+          items: {type: string}
+        ask_me_about: {type: string}
+        is_sample: {type: boolean}
+    HistoryRecord:
+      type: object
+      required: [id, input_text, status, is_sample, is_yours, created_at, top_matches, career_tip, output_json]
+      properties:
+        id: {type: integer}
+        input_text: {type: string}
+        status:
+          type: string
+          enum: [success, error, rate_limited, invalid_input]
+        is_sample: {type: boolean}
+        is_yours: {type: boolean}
+        created_at: {type: string}
+        top_matches:
+          type: array
+          items: {type: string}
+        career_tip: {type: string}
+        output_json: {type: string, description: Redacted JSON text for expandable details}
+    HistoryPage:
+      type: object
+      required: [records, total, sample_count, profile_count, school_count]
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/HistoryRecord"
+        total: {type: integer}
+        sample_count: {type: integer}
+        profile_count: {type: integer}
+        school_count: {type: integer}
     HealthStatus:
       type: object
       properties:

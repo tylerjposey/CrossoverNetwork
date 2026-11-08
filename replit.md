@@ -12,6 +12,8 @@ Crossover is a mobile-first career networking website with fictional sample peop
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
 - Required env: `SESSION_SECRET` — signs anonymous visitor cookies; never expose it to clients
+- Required env for AI: `ANTHROPIC_API_KEY` — direct official Anthropic SDK, server only
+- `pnpm --filter @workspace/api-server run test:phase2` — isolated PostgreSQL and fixture-provider tests; no paid AI calls
 
 ## Stack
 
@@ -29,16 +31,20 @@ Crossover is a mobile-first career networking website with fictional sample peop
 - `artifacts/api-server/src/lib/seed.ts` — transactional empty-table startup data seeding
 - `lib/db/src/schema` — profiles, usage log, swipes and persistent anonymous sessions
 - `lib/api-spec/openapi.yaml` — source of truth for API types
+- `artifacts/api-server/src/lib/matchmaking/config.ts` — single global daily cap constant (200), model and time/token budgets
+- `artifacts/api-server/src/lib/matchmaking` — provider, prompt, schema checks and atomic quota reservations
 
 ## Architecture decisions
 
 - No accounts or login: persistent anonymous sessions identify visitors only.
 - Startup seeds data, not schema. Replit Publish manages production schema changes.
 - Public history intentionally includes all visitors' records for cross-browser grading; redact contact information on the server.
+- AI reservations are persisted independently of usage logs. They count logical attempts, including failures and model-declared insufficient input; seeded logs and pre-AI rejections never consume quota.
+- Both quotas are reserved in one database transaction under a short global advisory lock; provider calls run outside the lock.
 
 ## Product
 
-Phase 1 provides a sample-people preview and public history with expandable inputs/results, status and sample badges. AI matching, onboarding, swiping and connections belong to subsequent approved phases.
+Phase 1 provides sample people and public history. Phase 2 adds session-persistent deck building, icebreaker rewrites and remaining-quota APIs. Onboarding/swiping UI and connection screens belong to subsequent approved phases.
 
 ## User preferences
 

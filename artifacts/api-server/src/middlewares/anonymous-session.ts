@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto";
 import cookieParser from "cookie-parser";
 import type { RequestHandler } from "express";
-import { db, sessions } from "@workspace/db";
-import { and, eq, gt } from "drizzle-orm";
+import { db, sessions, and, eq, gt } from "@workspace/db";
 
 const secret = process.env.SESSION_SECRET;
 if (!secret) throw new Error("SESSION_SECRET is required");

@@ -14,3 +14,5 @@ export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle(pool, { schema });
 
 export * from "./schema";
+// Keep query helpers and schema columns on the same Drizzle module instance.
+export { sql, eq, gt, and, desc } from "drizzle-orm";

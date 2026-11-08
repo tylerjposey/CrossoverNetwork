@@ -6,8 +6,20 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './actionError';
+export * from './actionErrorCode';
+export * from './careerTip';
+export * from './deckBuild';
+export * from './deckInput';
+export * from './friendlyErrorResponse';
 export * from './healthStatus';
 export * from './historyPage';
 export * from './historyRecord';
 export * from './historyRecordStatus';
+export * from './icebreakerDraft';
+export * from './icebreakerInput';
+export * from './matchmakingResult';
+export * from './profileMatch';
 export * from './sampleProfile';
+export * from './visitorProfile';
+export * from './visitorState';

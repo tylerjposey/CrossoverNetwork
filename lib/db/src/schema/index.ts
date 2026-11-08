@@ -21,3 +21,4 @@ export * from "./profiles";
 export * from "./sessions";
 export * from "./usage-log";
 export * from "./swipes";
+export * from "./ai-requests";

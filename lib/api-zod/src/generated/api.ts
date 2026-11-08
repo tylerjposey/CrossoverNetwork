@@ -9,6 +9,178 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Build a session deck with one charged AI request
+ */
+export const buildCrossoverDeckBodyInputTextMax = 1000;
+
+
+
+export const BuildCrossoverDeckBody = zod.object({
+  "input_text": zod.string().max(buildCrossoverDeckBodyInputTextMax)
+})
+
+export const buildCrossoverDeckResponseRemainingBuildsMin = 0;
+export const buildCrossoverDeckResponseRemainingBuildsMax = 5;
+
+export const buildCrossoverDeckResponseResultVisitorProfileOneFirstNameMax = 100;
+
+export const buildCrossoverDeckResponseResultVisitorProfileOneSchoolMax = 150;
+
+export const buildCrossoverDeckResponseResultVisitorProfileOneMajorMax = 150;
+
+export const buildCrossoverDeckResponseResultVisitorProfileOneYearMax = 100;
+
+export const buildCrossoverDeckResponseResultVisitorProfileOneCareerGoalsMax = 600;
+
+export const buildCrossoverDeckResponseResultVisitorProfileOneInterestsItemMax = 100;
+
+export const buildCrossoverDeckResponseResultVisitorProfileOneInterestsMax = 12;
+
+
+export const buildCrossoverDeckResponseResultMatchesItemMatchScoreMin = 0;
+export const buildCrossoverDeckResponseResultMatchesItemMatchScoreMax = 100;
+
+export const buildCrossoverDeckResponseResultMatchesItemWhyConnectMin = 10;
+export const buildCrossoverDeckResponseResultMatchesItemWhyConnectMax = 500;
+
+export const buildCrossoverDeckResponseResultMatchesItemIcebreakerMax = 299;
+
+export const buildCrossoverDeckResponseResultMatchesMax = 10;
+
+export const buildCrossoverDeckResponseResultCareerTipOneFieldMax = 150;
+
+export const buildCrossoverDeckResponseResultCareerTipOneReasonMax = 500;
+
+
+export const buildCrossoverDeckResponseResultReasonMax = 500;
+
+
+
+export const BuildCrossoverDeckResponse = zod.object({
+  "usage_id": zod.number().int(),
+  "deck_id": zod.string(),
+  "remaining_builds": zod.number().int().min(buildCrossoverDeckResponseRemainingBuildsMin).max(buildCrossoverDeckResponseRemainingBuildsMax),
+  "result": zod.object({
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(buildCrossoverDeckResponseResultVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(buildCrossoverDeckResponseResultVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(buildCrossoverDeckResponseResultVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(buildCrossoverDeckResponseResultVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(buildCrossoverDeckResponseResultVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(buildCrossoverDeckResponseResultVisitorProfileOneInterestsItemMax)).max(buildCrossoverDeckResponseResultVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "matches": zod.array(zod.object({
+  "profile_id": zod.number().int().min(1),
+  "match_score": zod.number().int().min(buildCrossoverDeckResponseResultMatchesItemMatchScoreMin).max(buildCrossoverDeckResponseResultMatchesItemMatchScoreMax),
+  "why_connect": zod.string().min(buildCrossoverDeckResponseResultMatchesItemWhyConnectMin).max(buildCrossoverDeckResponseResultMatchesItemWhyConnectMax),
+  "icebreaker": zod.string().min(1).max(buildCrossoverDeckResponseResultMatchesItemIcebreakerMax)
+})).max(buildCrossoverDeckResponseResultMatchesMax),
+  "career_tip": zod.union([zod.object({
+  "field": zod.string().min(1).max(buildCrossoverDeckResponseResultCareerTipOneFieldMax),
+  "reason": zod.string().min(1).max(buildCrossoverDeckResponseResultCareerTipOneReasonMax),
+  "profile_id": zod.number().int().min(1)
+}),zod.null()]),
+  "insufficient_input": zod.boolean(),
+  "reason": zod.string().max(buildCrossoverDeckResponseResultReasonMax).nullable()
+})
+})
+
+
+/**
+ * @summary Rewrite one current-deck icebreaker using the shared AI quotas
+ */
+
+
+
+export const RewriteCrossoverIcebreakerBody = zod.object({
+  "profile_id": zod.number().int().min(1)
+})
+
+export const rewriteCrossoverIcebreakerResponseIcebreakerMax = 299;
+
+export const rewriteCrossoverIcebreakerResponseRemainingBuildsMin = 0;
+export const rewriteCrossoverIcebreakerResponseRemainingBuildsMax = 5;
+
+
+
+export const RewriteCrossoverIcebreakerResponse = zod.object({
+  "profile_id": zod.number().int(),
+  "icebreaker": zod.string().min(1).max(rewriteCrossoverIcebreakerResponseIcebreakerMax),
+  "remaining_builds": zod.number().int().min(rewriteCrossoverIcebreakerResponseRemainingBuildsMin).max(rewriteCrossoverIcebreakerResponseRemainingBuildsMax)
+})
+
+
+/**
+ * @summary Resume this anonymous session without AI
+ */
+export const getCrossoverStateResponseRemainingBuildsMin = 0;
+export const getCrossoverStateResponseRemainingBuildsMax = 5;
+
+export const getCrossoverStateResponseDeckOneVisitorProfileOneFirstNameMax = 100;
+
+export const getCrossoverStateResponseDeckOneVisitorProfileOneSchoolMax = 150;
+
+export const getCrossoverStateResponseDeckOneVisitorProfileOneMajorMax = 150;
+
+export const getCrossoverStateResponseDeckOneVisitorProfileOneYearMax = 100;
+
+export const getCrossoverStateResponseDeckOneVisitorProfileOneCareerGoalsMax = 600;
+
+export const getCrossoverStateResponseDeckOneVisitorProfileOneInterestsItemMax = 100;
+
+export const getCrossoverStateResponseDeckOneVisitorProfileOneInterestsMax = 12;
+
+
+export const getCrossoverStateResponseDeckOneMatchesItemMatchScoreMin = 0;
+export const getCrossoverStateResponseDeckOneMatchesItemMatchScoreMax = 100;
+
+export const getCrossoverStateResponseDeckOneMatchesItemWhyConnectMin = 10;
+export const getCrossoverStateResponseDeckOneMatchesItemWhyConnectMax = 500;
+
+export const getCrossoverStateResponseDeckOneMatchesItemIcebreakerMax = 299;
+
+export const getCrossoverStateResponseDeckOneMatchesMax = 10;
+
+export const getCrossoverStateResponseDeckOneCareerTipOneFieldMax = 150;
+
+export const getCrossoverStateResponseDeckOneCareerTipOneReasonMax = 500;
+
+
+export const getCrossoverStateResponseDeckOneReasonMax = 500;
+
+
+
+export const GetCrossoverStateResponse = zod.object({
+  "input_text": zod.string(),
+  "remaining_builds": zod.number().int().min(getCrossoverStateResponseRemainingBuildsMin).max(getCrossoverStateResponseRemainingBuildsMax),
+  "deck_id": zod.string().nullable(),
+  "deck": zod.union([zod.object({
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(getCrossoverStateResponseDeckOneVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(getCrossoverStateResponseDeckOneVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(getCrossoverStateResponseDeckOneVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(getCrossoverStateResponseDeckOneVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(getCrossoverStateResponseDeckOneVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(getCrossoverStateResponseDeckOneVisitorProfileOneInterestsItemMax)).max(getCrossoverStateResponseDeckOneVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "matches": zod.array(zod.object({
+  "profile_id": zod.number().int().min(1),
+  "match_score": zod.number().int().min(getCrossoverStateResponseDeckOneMatchesItemMatchScoreMin).max(getCrossoverStateResponseDeckOneMatchesItemMatchScoreMax),
+  "why_connect": zod.string().min(getCrossoverStateResponseDeckOneMatchesItemWhyConnectMin).max(getCrossoverStateResponseDeckOneMatchesItemWhyConnectMax),
+  "icebreaker": zod.string().min(1).max(getCrossoverStateResponseDeckOneMatchesItemIcebreakerMax)
+})).max(getCrossoverStateResponseDeckOneMatchesMax),
+  "career_tip": zod.union([zod.object({
+  "field": zod.string().min(1).max(getCrossoverStateResponseDeckOneCareerTipOneFieldMax),
+  "reason": zod.string().min(1).max(getCrossoverStateResponseDeckOneCareerTipOneReasonMax),
+  "profile_id": zod.number().int().min(1)
+}),zod.null()]),
+  "insufficient_input": zod.boolean(),
+  "reason": zod.string().max(getCrossoverStateResponseDeckOneReasonMax).nullable()
+}),zod.null()])
+})
+
+
+/**
  * @summary Public redacted usage history
  */
 export const GetCrossoverHistoryResponse = zod.object({

@@ -6,23 +6,33 @@
  * OpenAPI spec version: 0.1.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
+  DeckBuild,
+  DeckInput,
+  FriendlyErrorResponse,
   HealthStatus,
   HistoryPage,
-  SampleProfile
+  IcebreakerDraft,
+  IcebreakerInput,
+  SampleProfile,
+  VisitorState
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
-import type { ErrorType } from '../custom-fetch';
+import type { ErrorType , BodyType } from '../custom-fetch';
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -47,6 +57,259 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getBuildCrossoverDeckUrl = () => {
+
+
+
+
+  return `/api/crossover/deck`
+}
+
+/**
+ * @summary Build a session deck with one charged AI request
+ */
+export const buildCrossoverDeck = async (deckInput: DeckInput, options?: Parameters<typeof customFetch>[1]): Promise<DeckBuild> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DeckBuild>(getBuildCrossoverDeckUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(deckInput)
+  }
+);}
+
+
+
+
+
+export const getBuildCrossoverDeckMutationKey = () => ['buildCrossoverDeck'] as const;
+
+export const getBuildCrossoverDeckMutationOptions = <TError = ErrorType<FriendlyErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof buildCrossoverDeck>>, TError,BuildCrossoverDeckMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof buildCrossoverDeck>>, TError,BuildCrossoverDeckMutationVariables, TContext> => {
+
+const mutationKey = getBuildCrossoverDeckMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof buildCrossoverDeck>>, BuildCrossoverDeckMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  buildCrossoverDeck(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BuildCrossoverDeckMutationResult = NonNullable<Awaited<ReturnType<typeof buildCrossoverDeck>>>
+    export type BuildCrossoverDeckMutationBody = BodyType<DeckInput>
+    export type BuildCrossoverDeckMutationError = ErrorType<FriendlyErrorResponse>
+    export type BuildCrossoverDeckMutationVariables = {data: BodyType<DeckInput>}
+
+    /**
+ * @summary Build a session deck with one charged AI request
+ */
+export const useBuildCrossoverDeck = <TError = ErrorType<FriendlyErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof buildCrossoverDeck>>, TError,BuildCrossoverDeckMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof buildCrossoverDeck>>,
+        TError,
+        BuildCrossoverDeckMutationVariables,
+        TContext
+      > => {
+      return useMutation(getBuildCrossoverDeckMutationOptions(options));
+    }
+
+export const getRewriteCrossoverIcebreakerUrl = () => {
+
+
+
+
+  return `/api/crossover/icebreaker/rewrite`
+}
+
+/**
+ * @summary Rewrite one current-deck icebreaker using the shared AI quotas
+ */
+export const rewriteCrossoverIcebreaker = async (icebreakerInput: IcebreakerInput, options?: Parameters<typeof customFetch>[1]): Promise<IcebreakerDraft> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<IcebreakerDraft>(getRewriteCrossoverIcebreakerUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(icebreakerInput)
+  }
+);}
+
+
+
+
+
+export const getRewriteCrossoverIcebreakerMutationKey = () => ['rewriteCrossoverIcebreaker'] as const;
+
+export const getRewriteCrossoverIcebreakerMutationOptions = <TError = ErrorType<FriendlyErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewriteCrossoverIcebreaker>>, TError,RewriteCrossoverIcebreakerMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rewriteCrossoverIcebreaker>>, TError,RewriteCrossoverIcebreakerMutationVariables, TContext> => {
+
+const mutationKey = getRewriteCrossoverIcebreakerMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rewriteCrossoverIcebreaker>>, RewriteCrossoverIcebreakerMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  rewriteCrossoverIcebreaker(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RewriteCrossoverIcebreakerMutationResult = NonNullable<Awaited<ReturnType<typeof rewriteCrossoverIcebreaker>>>
+    export type RewriteCrossoverIcebreakerMutationBody = BodyType<IcebreakerInput>
+    export type RewriteCrossoverIcebreakerMutationError = ErrorType<FriendlyErrorResponse>
+    export type RewriteCrossoverIcebreakerMutationVariables = {data: BodyType<IcebreakerInput>}
+
+    /**
+ * @summary Rewrite one current-deck icebreaker using the shared AI quotas
+ */
+export const useRewriteCrossoverIcebreaker = <TError = ErrorType<FriendlyErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewriteCrossoverIcebreaker>>, TError,RewriteCrossoverIcebreakerMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rewriteCrossoverIcebreaker>>,
+        TError,
+        RewriteCrossoverIcebreakerMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRewriteCrossoverIcebreakerMutationOptions(options));
+    }
+
+export const getGetCrossoverStateUrl = () => {
+
+
+
+
+  return `/api/crossover/state`
+}
+
+/**
+ * @summary Resume this anonymous session without AI
+ */
+export const getCrossoverState = async ( options?: Parameters<typeof customFetch>[1]): Promise<VisitorState> => {
+
+  return customFetch<VisitorState>(getGetCrossoverStateUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCrossoverStateQueryKey = () => {
+    return [
+    `/api/crossover/state`
+    ] as const;
+    }
+
+
+export const getGetCrossoverStateQueryOptions = <TData = Awaited<ReturnType<typeof getCrossoverState>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCrossoverState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCrossoverStateQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCrossoverState>>> = ({ signal }) => getCrossoverState({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCrossoverState>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCrossoverStateQueryResult = NonNullable<Awaited<ReturnType<typeof getCrossoverState>>>
+export type GetCrossoverStateQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Resume this anonymous session without AI
+ */
+
+export function useGetCrossoverState<TData = Awaited<ReturnType<typeof getCrossoverState>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCrossoverState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCrossoverStateQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetCrossoverHistoryUrl = () => {
 

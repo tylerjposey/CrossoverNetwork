@@ -1,12 +1,13 @@
 import { Router, type IRouter } from "express";
-import { db, profiles, usageLog } from "@workspace/db";
-import { desc } from "drizzle-orm";
+import { db, profiles, usageLog, desc } from "@workspace/db";
 import { GetCrossoverHistoryResponse, GetCrossoverProfilesResponse } from "@workspace/api-zod";
 import { anonymousSession, parseSessionCookie } from "../middlewares/anonymous-session";
 import { redactText, redactValue } from "../lib/redact";
+import crossoverAiRouter from "./crossover-ai";
 
 const router: IRouter = Router();
 router.use("/crossover", parseSessionCookie, anonymousSession);
+router.use(crossoverAiRouter);
 router.get("/crossover/profiles", async (_req, res): Promise<void> => {
   res.json(GetCrossoverProfilesResponse.parse(await db.select().from(profiles).orderBy(profiles.id)));
 });

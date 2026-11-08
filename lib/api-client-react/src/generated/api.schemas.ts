@@ -5,6 +5,153 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface VisitorProfile {
+  /**
+     * @maxLength 100
+     * @nullable
+     */
+  first_name: string | null;
+  /**
+     * @maxLength 150
+     * @nullable
+     */
+  school: string | null;
+  /**
+     * @maxLength 150
+     * @nullable
+     */
+  major: string | null;
+  /**
+     * @maxLength 100
+     * @nullable
+     */
+  year: string | null;
+  /** @maxLength 600 */
+  career_goals: string;
+  /**
+     * @maxItems 12
+     * @items.maxLength 100
+     */
+  interests: string[];
+}
+
+export interface ProfileMatch {
+  /** @minimum 1 */
+  profile_id: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  match_score: number;
+  /**
+     * @minLength 10
+     * @maxLength 500
+     */
+  why_connect: string;
+  /**
+     * @minLength 1
+     * @maxLength 299
+     */
+  icebreaker: string;
+}
+
+export interface CareerTip {
+  /**
+     * @minLength 1
+     * @maxLength 150
+     */
+  field: string;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  reason: string;
+  /** @minimum 1 */
+  profile_id: number;
+}
+
+export interface MatchmakingResult {
+  visitor_profile: VisitorProfile | null;
+  /** @maxItems 10 */
+  matches: ProfileMatch[];
+  career_tip: CareerTip | null;
+  insufficient_input: boolean;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  reason: string | null;
+}
+
+export interface DeckInput {
+  /** @maxLength 1000 */
+  input_text: string;
+}
+
+export interface DeckBuild {
+  usage_id: number;
+  deck_id: string;
+  /**
+     * @minimum 0
+     * @maximum 5
+     */
+  remaining_builds: number;
+  result: MatchmakingResult;
+}
+
+export interface IcebreakerInput {
+  /** @minimum 1 */
+  profile_id: number;
+}
+
+export interface IcebreakerDraft {
+  profile_id: number;
+  /**
+     * @minLength 1
+     * @maxLength 299
+     */
+  icebreaker: string;
+  /**
+     * @minimum 0
+     * @maximum 5
+     */
+  remaining_builds: number;
+}
+
+export interface VisitorState {
+  input_text: string;
+  /**
+     * @minimum 0
+     * @maximum 5
+     */
+  remaining_builds: number;
+  /** @nullable */
+  deck_id: string | null;
+  deck: MatchmakingResult | null;
+}
+
+export type ActionErrorCode = typeof ActionErrorCode[keyof typeof ActionErrorCode];
+
+
+export const ActionErrorCode = {
+  invalid_input: 'invalid_input',
+  insufficient_input: 'insufficient_input',
+  visitor_limit: 'visitor_limit',
+  global_limit: 'global_limit',
+  ai_unavailable: 'ai_unavailable',
+  invalid_profile: 'invalid_profile',
+} as const;
+
+export interface ActionError {
+  error: string;
+  code: ActionErrorCode;
+  /**
+     * @minimum 0
+     * @maximum 5
+     */
+  remaining_builds: number;
+}
+
 export interface SampleProfile {
   id: number;
   first_name: string;
@@ -52,4 +199,9 @@ export interface HistoryPage {
 export interface HealthStatus {
   status: string;
 }
+
+/**
+ * Friendly error; input remains saved and no raw provider errors are exposed
+ */
+export type FriendlyErrorResponse = ActionError;
 

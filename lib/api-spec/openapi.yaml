@@ -11,6 +11,60 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /crossover/deck:
+    post:
+      operationId: buildCrossoverDeck
+      summary: Build a session deck with one charged AI request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/DeckInput"}
+      responses:
+        "200":
+          description: Validated matchmaking result
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/DeckBuild"}
+        "400":
+          $ref: "#/components/responses/FriendlyError"
+        "422":
+          $ref: "#/components/responses/FriendlyError"
+        "429":
+          $ref: "#/components/responses/FriendlyError"
+        "503":
+          $ref: "#/components/responses/FriendlyError"
+  /crossover/icebreaker/rewrite:
+    post:
+      operationId: rewriteCrossoverIcebreaker
+      summary: Rewrite one current-deck icebreaker using the shared AI quotas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/IcebreakerInput"}
+      responses:
+        "200":
+          description: A new draft
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/IcebreakerDraft"}
+        "400":
+          $ref: "#/components/responses/FriendlyError"
+        "429":
+          $ref: "#/components/responses/FriendlyError"
+        "503":
+          $ref: "#/components/responses/FriendlyError"
+  /crossover/state:
+    get:
+      operationId: getCrossoverState
+      summary: Resume this anonymous session without AI
+      responses:
+        "200":
+          description: Session state and live remaining hourly quota
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/VisitorState"}
   /crossover/history:
     get:
       operationId: getCrossoverHistory
@@ -49,7 +103,110 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 components:
+  responses:
+    FriendlyError:
+      description: Friendly error; input remains saved and no raw provider errors are exposed
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ActionError"}
   schemas:
+    VisitorProfile:
+      type: object
+      additionalProperties: false
+      required: [first_name, school, major, year, career_goals, interests]
+      properties:
+        first_name: {type: [string, "null"], maxLength: 100}
+        school: {type: [string, "null"], maxLength: 150}
+        major: {type: [string, "null"], maxLength: 150}
+        year: {type: [string, "null"], maxLength: 100}
+        career_goals: {type: string, maxLength: 600}
+        interests:
+          type: array
+          maxItems: 12
+          items: {type: string, maxLength: 100}
+    ProfileMatch:
+      type: object
+      additionalProperties: false
+      required: [profile_id, match_score, why_connect, icebreaker]
+      properties:
+        profile_id: {type: integer, minimum: 1}
+        match_score: {type: integer, minimum: 0, maximum: 100}
+        why_connect: {type: string, minLength: 10, maxLength: 500}
+        icebreaker: {type: string, minLength: 1, maxLength: 299}
+    CareerTip:
+      type: object
+      additionalProperties: false
+      required: [field, reason, profile_id]
+      properties:
+        field: {type: string, minLength: 1, maxLength: 150}
+        reason: {type: string, minLength: 1, maxLength: 500}
+        profile_id: {type: integer, minimum: 1}
+    MatchmakingResult:
+      type: object
+      additionalProperties: false
+      required: [visitor_profile, matches, career_tip, insufficient_input, reason]
+      properties:
+        visitor_profile:
+          anyOf:
+            - {$ref: "#/components/schemas/VisitorProfile"}
+            - {type: "null"}
+        matches:
+          type: array
+          maxItems: 10
+          items: {$ref: "#/components/schemas/ProfileMatch"}
+        career_tip:
+          anyOf:
+            - {$ref: "#/components/schemas/CareerTip"}
+            - {type: "null"}
+        insufficient_input: {type: boolean}
+        reason: {type: [string, "null"], maxLength: 500}
+    DeckInput:
+      type: object
+      additionalProperties: false
+      required: [input_text]
+      properties:
+        input_text: {type: string, maxLength: 1000}
+    DeckBuild:
+      type: object
+      required: [usage_id, deck_id, remaining_builds, result]
+      properties:
+        usage_id: {type: integer}
+        deck_id: {type: string}
+        remaining_builds: {type: integer, minimum: 0, maximum: 5}
+        result: {$ref: "#/components/schemas/MatchmakingResult"}
+    IcebreakerInput:
+      type: object
+      additionalProperties: false
+      required: [profile_id]
+      properties:
+        profile_id: {type: integer, minimum: 1}
+    IcebreakerDraft:
+      type: object
+      required: [profile_id, icebreaker, remaining_builds]
+      properties:
+        profile_id: {type: integer}
+        icebreaker: {type: string, minLength: 1, maxLength: 299}
+        remaining_builds: {type: integer, minimum: 0, maximum: 5}
+    VisitorState:
+      type: object
+      required: [input_text, remaining_builds, deck_id, deck]
+      properties:
+        input_text: {type: string}
+        remaining_builds: {type: integer, minimum: 0, maximum: 5}
+        deck_id: {type: [string, "null"]}
+        deck:
+          anyOf:
+            - {$ref: "#/components/schemas/MatchmakingResult"}
+            - {type: "null"}
+    ActionError:
+      type: object
+      required: [error, code, remaining_builds]
+      properties:
+        error: {type: string}
+        code:
+          type: string
+          enum: [invalid_input, insufficient_input, visitor_limit, global_limit, ai_unavailable, invalid_profile]
+        remaining_builds: {type: integer, minimum: 0, maximum: 5}
     SampleProfile:
       type: object
       required: [id, first_name, school, major, year, headline, career_goals, interests, ask_me_about, is_sample]

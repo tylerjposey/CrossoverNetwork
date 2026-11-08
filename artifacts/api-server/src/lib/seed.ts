@@ -1,5 +1,4 @@
-import { db, profiles, usageLog } from "@workspace/db";
-import { sql } from "drizzle-orm";
+import { db, profiles, usageLog, sql } from "@workspace/db";
 import { sampleProfiles } from "./sample-profiles";
 import { logger } from "./logger";
 

@@ -22,3 +22,7 @@ Public history must show ALL sample and real records across sessions, newest fir
 Limit AI usage globally to 200 logical calls per UTC day, configurable through one constant, as well as five per visitor per rolling hour.
 **Why:** The user explicitly added a database-backed global daily cap.
 **How to apply:** Count deck builds and rewrites, including errors and model-declared insufficient input; count a build's parse retry only once. Pre-AI input-check rejection is free. A global block logs rate_limited and uses the friendly AI-break message, never the visitor-limit message. Phase 2 must demonstrate all specified input/injection/quota paths, restore the temporarily lowered test cap, and explain how to change the constant.
+
+Keep deck generation concise and non-thinking within the user's 3,500-token budget.
+**Why:** Live Haiku responses used the repair retry on renamed wildcard fields and could then truncate, exhausting the sole allowed retry. More explicit brevity/field instructions and non-thinking mode produced a valid live injection-resistant deck.
+**How to apply:** Do not silently raise the approved token budget or add retries to compensate for verbose reasoning/output; preserve the single-retry and total-time constraints.

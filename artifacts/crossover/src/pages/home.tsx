@@ -1,111 +1,140 @@
-import { Link } from 'wouter';
-import { ArrowRight } from 'lucide-react';
-import { useGetCrossoverProfiles, type SampleProfile } from '@workspace/api-client-react';
-import { ErrorCard, Pill, Shell, usePageMeta } from '@/components/crossover/shell';
+import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  useGetCrossoverState, getGetCrossoverStateQueryKey, useGetCrossoverProfiles, getGetCrossoverProfilesQueryKey,
+  getGetCrossoverHistoryQueryKey, useBuildCrossoverDeck, useUpdateCrossoverProfile, useConfirmCrossoverProfile,
+  useCreateCrossoverSwipe, useUndoCrossoverSwipe, type VisitorProfile, type VisitorState,
+} from '@workspace/api-client-react';
+import { ErrorCard, Shell, usePageMeta } from '@/components/crossover/shell';
+import { Onboarding } from '@/components/crossover/onboarding';
+import { BuildLoading } from '@/components/crossover/build-loading';
+import { ProfileReview } from '@/components/crossover/profile-review';
+import { SwipeDeck } from '@/components/crossover/swipe-deck';
+import { apiErrorText, isConflict } from '@/lib/api-errors';
 
-const HUES = [12, 322, 160, 265, 45, 195];
+type Mode = 'auto' | 'input' | 'profile';
 
-function ProfileCard({ p, i }: { p: SampleProfile; i: number }) {
-  const hue = HUES[p.id % HUES.length];
+function PageSkeleton() {
   return (
-    <article
-      data-testid={`card-profile-${p.id}`}
-      className="rise group rounded-[24px] border border-card-border bg-card p-5 transition-transform duration-300 hover:-translate-y-0.5"
-      style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
-    >
-      <div className="flex items-start gap-3">
-        <div
-          aria-hidden
-          className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-lg font-bold text-[hsl(250_30%_8%)] transition-transform duration-300 group-hover:rotate-6"
-          style={{ background: `linear-gradient(135deg, hsl(${hue} 90% 66%), hsl(${(hue + 60) % 360} 85% 62%))` }}
-        >
-          {p.first_name.charAt(0)}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-bold" data-testid={`text-profile-name-${p.id}`}>{p.first_name}</h3>
-            <Pill tone="sample" testId={`badge-sample-profile-${p.id}`}>Sample profile</Pill>
-          </div>
-          <p className="text-sm text-muted-foreground">{p.major} &middot; {p.year} &middot; {p.school}</p>
-        </div>
-      </div>
-      <p className="mt-4 text-[15px] font-medium leading-snug">{p.headline}</p>
-      <dl className="mt-4 space-y-3 text-sm">
-        <div>
-          <dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Heading toward</dt>
-          <dd className="mt-0.5">{p.career_goals}</dd>
-        </div>
-        <div>
-          <dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ask me about</dt>
-          <dd className="mt-0.5">{p.ask_me_about}</dd>
-        </div>
-      </dl>
-      {p.interests.length > 0 && (
-        <ul className="mt-4 flex flex-wrap gap-1.5" aria-label="Interests">
-          {p.interests.map((t) => (
-            <li key={t} className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">{t}</li>
-          ))}
-        </ul>
-      )}
-    </article>
+    <div className="space-y-4 pt-6" aria-busy="true" data-testid="skeleton-home">
+      <div className="skel h-6 w-40 rounded-full" />
+      <div className="skel h-10 w-4/5 rounded-xl" />
+      <div className="skel h-64 w-full rounded-[24px]" />
+    </div>
   );
 }
 
 export default function Home() {
   usePageMeta(
     'Crossover - Connect and advance your career',
-    'Connect with students and young professionals who share your goals and interests, exchange ideas, and advance your career. Phase one previews fictional sample people.',
+    'Meet students and young professionals who share your goals and interests. Build a deck, swipe, and start a conversation.',
   );
-  const { data, isLoading, isError, refetch, isFetching } = useGetCrossoverProfiles();
+  const qc = useQueryClient();
+  const key = getGetCrossoverStateQueryKey();
+  const stateQ = useGetCrossoverState({ query: {
+    queryKey: key, retry: 1, staleTime: 15_000, refetchInterval: 30_000, refetchOnWindowFocus: true,
+  } });
+  const state = stateQ.data;
+  const profilesQ = useGetCrossoverProfiles({ query: { enabled: !!state, queryKey: getGetCrossoverProfilesQueryKey() } });
 
-  return (
-    <Shell>
-      <section className="rise pt-6">
-        <Pill tone="yours">Phase one</Pill>
-        <h1 className="mt-4 text-[40px] font-extrabold leading-[1.02] tracking-tight">
-          Connect with people. <span className="grad-text">Advance your career.</span>
-        </h1>
-        <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
-          Meet students and young professionals who share your goals and interests. Exchange ideas, explore opportunities, and help each other take the next step in your careers.
-        </p>
-      </section>
+  const build = useBuildCrossoverDeck({ mutation: { retry: false } });
+  const update = useUpdateCrossoverProfile();
+  const confirm = useConfirmCrossoverProfile();
+  const swipe = useCreateCrossoverSwipe();
+  const undo = useUndoCrossoverSwipe();
 
-      <section className="rise mt-6 rounded-[24px] border border-card-border bg-card p-5" style={{ animationDelay: '80ms' }}>
-        <h2 className="font-bold">What works today</h2>
-        <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-          <li className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />A preview of fictional sample people below.</li>
-          <li className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />A public, redacted activity history.</li>
-          <li className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50" />Your own profile and matching arrive in a later phase.</li>
-        </ul>
-        <Link href="/history" data-testid="link-hero-history" className="grad-accent mt-5 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-[hsl(250_30%_8%)] transition-transform hover:translate-x-0.5 active:scale-95">
-          See the history <ArrowRight className="h-4 w-4" aria-hidden />
-        </Link>
-      </section>
+  const [mode, setMode] = useState<Mode>('auto');
+  const [text, setText] = useState('');
+  const [buildErr, setBuildErr] = useState<string | null>(null);
+  const [profileErr, setProfileErr] = useState<string | null>(null);
+  const [deckErr, setDeckErr] = useState<string | null>(null);
+  const seeded = useRef(false);
 
-      <section className="mt-10" aria-labelledby="people-heading">
-        <div className="flex items-end justify-between">
-          <h2 id="people-heading" className="text-xl font-bold tracking-tight">People you could cross paths with</h2>
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">Every person here is made up, so you can see the shape of things.</p>
+  useEffect(() => {
+    if (state && !seeded.current) { seeded.current = true; setText(state.input_text ?? ''); }
+  }, [state]);
 
-        <div className="mt-5 space-y-4" aria-busy={isLoading}>
-          {isLoading &&
-            [0, 1, 2].map((i) => (
-              <div key={i} className="rounded-[24px] border border-card-border bg-card p-5" data-testid={`skeleton-profile-${i}`}>
-                <div className="flex gap-3"><div className="skel h-12 w-12 rounded-2xl" /><div className="flex-1 space-y-2"><div className="skel h-4 w-1/3 rounded" /><div className="skel h-3 w-2/3 rounded" /></div></div>
-                <div className="skel mt-4 h-4 w-full rounded" /><div className="skel mt-2 h-4 w-4/5 rounded" />
-              </div>
-            ))}
-          {isError && <ErrorCard message="We could not load the sample people." onRetry={() => refetch()} retrying={isFetching} />}
-          {data && data.length === 0 && (
-            <div className="rounded-[24px] border border-dashed border-border p-8 text-center" data-testid="empty-profiles">
-              <p className="font-semibold">No sample people yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">The preview cast has not arrived. Check back soon.</p>
-            </div>
-          )}
-          {data?.map((p, i) => <ProfileCard key={p.id} p={p} i={i} />)}
-        </div>
-      </section>
-    </Shell>
-  );
+  const put = (s: VisitorState) => qc.setQueryData(key, s);
+  const handle = (e: unknown, set: (m: string) => void) => {
+    set(apiErrorText(e));
+    if (isConflict(e)) void qc.invalidateQueries({ queryKey: key });
+  };
+
+  const onBuild = async () => {
+    setBuildErr(null);
+    try {
+      await build.mutateAsync({ data: { input_text: text } });
+      void qc.invalidateQueries({ queryKey: getGetCrossoverHistoryQueryKey() });
+      await qc.invalidateQueries({ queryKey: key });
+      setMode('auto');
+    } catch (e) {
+      setBuildErr(apiErrorText(e, 'Our AI matchmaker is taking a break. Your info is saved, so try again in a few minutes.'));
+      void qc.invalidateQueries({ queryKey: key });
+    }
+  };
+
+  const onSave = async (profile: VisitorProfile) => {
+    if (!state?.deck_id) return false;
+    setProfileErr(null);
+    try { put(await update.mutateAsync({ data: { deck_id: state.deck_id, profile } })); return true; }
+    catch (e) { handle(e, setProfileErr); return false; }
+  };
+  const onConfirm = async () => {
+    if (!state?.deck_id) return;
+    setProfileErr(null);
+    try { put(await confirm.mutateAsync({ data: { deck_id: state.deck_id } })); setMode('auto'); }
+    catch (e) { handle(e, setProfileErr); }
+  };
+  const onSwipe = async (profile_id: number, direction: 'left' | 'right' | 'super') => {
+    if (!state?.deck_id) return false;
+    setDeckErr(null);
+    try { put(await swipe.mutateAsync({ data: { deck_id: state.deck_id, profile_id, direction } })); return true; }
+    catch (e) { handle(e, setDeckErr); return false; }
+  };
+  const onUndo = async () => {
+    const last = state?.swipes[state.swipes.length - 1];
+    if (!state?.deck_id || !last) return;
+    setDeckErr(null);
+    try { put(await undo.mutateAsync({ data: { deck_id: state.deck_id, swipe_id: last.id } })); }
+    catch (e) { handle(e, setDeckErr); }
+  };
+
+  let body;
+  if (build.isPending) body = <BuildLoading />;
+  else if (stateQ.isLoading) body = <PageSkeleton />;
+  else if (!state) body = <div className="pt-6"><ErrorCard message="We could not load your session." onRetry={() => stateQ.refetch()} retrying={stateQ.isFetching} /></div>;
+  else {
+    const deck = state.deck;
+    const usable = !!state.deck_id && !!deck && !deck.insufficient_input && !!state.visitor_profile;
+    const notice = deck?.insufficient_input ? deck.reason ?? 'We need a bit more to go on. Add your goals and interests.' : null;
+    if (!usable || mode === 'input') {
+      body = (
+        <Onboarding text={text} setText={setText} remaining={state.remaining_builds} onBuild={onBuild} building={build.isPending}
+          error={buildErr} notice={mode === 'input' ? null : notice} hasDeck={usable} onBackToDeck={() => setMode('auto')} />
+      );
+    } else if (!state.profile_confirmed || mode === 'profile') {
+      body = (
+        <ProfileReview key={state.deck_id} profile={state.visitor_profile!} confirmed={state.profile_confirmed}
+          onSave={onSave} onContinue={onConfirm} onBackToDeck={() => setMode('auto')} onEditInput={() => setMode('input')}
+          saving={update.isPending} confirming={confirm.isPending} error={profileErr} />
+      );
+    } else if (profilesQ.isLoading) body = <PageSkeleton />;
+    else if (profilesQ.isError || !profilesQ.data) body = <div className="pt-6"><ErrorCard message="We could not load your deck's people." onRetry={() => profilesQ.refetch()} retrying={profilesQ.isFetching} /></div>;
+    else {
+      body = (
+        <SwipeDeck state={state} profiles={profilesQ.data} onSwipe={onSwipe} onUndo={onUndo}
+          pending={swipe.isPending || undo.isPending} error={deckErr}
+          onEditProfile={() => { setProfileErr(null); setMode('profile'); }} onEditInput={() => setMode('input')} />
+      );
+    }
+  }
+
+  return <Shell>
+    {state?.deck_id && mode !== 'input' && !build.isPending && (
+      <p className="mt-3 w-fit rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
+        AI builds left this hour: {state.remaining_builds} of 5
+      </p>
+    )}
+    {body}
+  </Shell>;
 }

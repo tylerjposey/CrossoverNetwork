@@ -14,6 +14,7 @@ Crossover is a mobile-first career networking website with fictional sample peop
 - Required env: `SESSION_SECRET` — signs anonymous visitor cookies; never expose it to clients
 - Required env for AI: `ANTHROPIC_API_KEY` — direct official Anthropic SDK, server only
 - `pnpm --filter @workspace/api-server run test:phase2` — isolated PostgreSQL and fixture-provider tests; no paid AI calls
+- `pnpm --filter @workspace/api-server run test:phase3` — isolated profile/deck/swipe/undo persistence checks; no paid AI calls
 
 ## Stack
 
@@ -33,6 +34,7 @@ Crossover is a mobile-first career networking website with fictional sample peop
 - `lib/api-spec/openapi.yaml` — source of truth for API types
 - `artifacts/api-server/src/lib/matchmaking/config.ts` — single global daily cap constant (200), model and time/token budgets
 - `artifacts/api-server/src/lib/matchmaking` — provider, prompt, schema checks and atomic quota reservations
+- `artifacts/api-server/src/lib/deck-store.ts` — authoritative deck order, profile edits, swipe progress and undo
 
 ## Architecture decisions
 
@@ -41,10 +43,11 @@ Crossover is a mobile-first career networking website with fictional sample peop
 - Public history intentionally includes all visitors' records for cross-browser grading; redact contact information on the server.
 - AI reservations are persisted independently of usage logs. They count logical attempts, including failures and model-declared insufficient input; seeded logs and pre-AI rejections never consume quota.
 - Both quotas are reserved in one database transaction under a short global advisory lock; provider calls run outside the lock.
+- Swipes are scoped to deck and anonymous session; session-row locking and a uniqueness constraint prevent duplicate actions. Undo checks the expected latest swipe.
 
 ## Product
 
-Phase 1 provides sample people and public history. Phase 2 adds session-persistent deck building, icebreaker rewrites and remaining-quota APIs. Onboarding/swiping UI and connection screens belong to subsequent approved phases.
+Phases 1–3 provide fictional profiles, public redacted history, AI endpoints, onboarding, editable parsed cards and a persistent swipe deck with three Super Connects and undo. Connection screens, the Connections tab, deck-complete statistics and streaks remain in Phase 4.
 
 ## User preferences
 

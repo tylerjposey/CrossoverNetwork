@@ -9,6 +9,477 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Save profile edits to this session without changing the deck or using AI
+ */
+
+export const updateCrossoverProfileBodyProfileFirstNameMax = 100;
+
+export const updateCrossoverProfileBodyProfileSchoolMax = 150;
+
+export const updateCrossoverProfileBodyProfileMajorMax = 150;
+
+export const updateCrossoverProfileBodyProfileYearMax = 100;
+
+export const updateCrossoverProfileBodyProfileCareerGoalsMax = 600;
+
+export const updateCrossoverProfileBodyProfileInterestsItemMax = 100;
+
+export const updateCrossoverProfileBodyProfileInterestsMax = 12;
+
+
+
+export const UpdateCrossoverProfileBody = zod.object({
+  "deck_id": zod.string().min(1),
+  "profile": zod.object({
+  "first_name": zod.string().max(updateCrossoverProfileBodyProfileFirstNameMax).nullable(),
+  "school": zod.string().max(updateCrossoverProfileBodyProfileSchoolMax).nullable(),
+  "major": zod.string().max(updateCrossoverProfileBodyProfileMajorMax).nullable(),
+  "year": zod.string().max(updateCrossoverProfileBodyProfileYearMax).nullable(),
+  "career_goals": zod.string().max(updateCrossoverProfileBodyProfileCareerGoalsMax),
+  "interests": zod.array(zod.string().max(updateCrossoverProfileBodyProfileInterestsItemMax)).max(updateCrossoverProfileBodyProfileInterestsMax)
+})
+})
+
+export const updateCrossoverProfileResponseRemainingBuildsMin = 0;
+export const updateCrossoverProfileResponseRemainingBuildsMax = 5;
+
+export const updateCrossoverProfileResponseDeckOneVisitorProfileOneFirstNameMax = 100;
+
+export const updateCrossoverProfileResponseDeckOneVisitorProfileOneSchoolMax = 150;
+
+export const updateCrossoverProfileResponseDeckOneVisitorProfileOneMajorMax = 150;
+
+export const updateCrossoverProfileResponseDeckOneVisitorProfileOneYearMax = 100;
+
+export const updateCrossoverProfileResponseDeckOneVisitorProfileOneCareerGoalsMax = 600;
+
+export const updateCrossoverProfileResponseDeckOneVisitorProfileOneInterestsItemMax = 100;
+
+export const updateCrossoverProfileResponseDeckOneVisitorProfileOneInterestsMax = 12;
+
+
+export const updateCrossoverProfileResponseDeckOneMatchesItemMatchScoreMin = 0;
+export const updateCrossoverProfileResponseDeckOneMatchesItemMatchScoreMax = 100;
+
+export const updateCrossoverProfileResponseDeckOneMatchesItemWhyConnectMin = 10;
+export const updateCrossoverProfileResponseDeckOneMatchesItemWhyConnectMax = 500;
+
+export const updateCrossoverProfileResponseDeckOneMatchesItemIcebreakerMax = 299;
+
+export const updateCrossoverProfileResponseDeckOneMatchesMax = 10;
+
+export const updateCrossoverProfileResponseDeckOneCareerTipOneFieldMax = 150;
+
+export const updateCrossoverProfileResponseDeckOneCareerTipOneReasonMax = 500;
+
+
+export const updateCrossoverProfileResponseDeckOneReasonMax = 500;
+
+export const updateCrossoverProfileResponseVisitorProfileOneFirstNameMax = 100;
+
+export const updateCrossoverProfileResponseVisitorProfileOneSchoolMax = 150;
+
+export const updateCrossoverProfileResponseVisitorProfileOneMajorMax = 150;
+
+export const updateCrossoverProfileResponseVisitorProfileOneYearMax = 100;
+
+export const updateCrossoverProfileResponseVisitorProfileOneCareerGoalsMax = 600;
+
+export const updateCrossoverProfileResponseVisitorProfileOneInterestsItemMax = 100;
+
+export const updateCrossoverProfileResponseVisitorProfileOneInterestsMax = 12;
+
+export const updateCrossoverProfileResponseSuperConnectsLeftMin = 0;
+export const updateCrossoverProfileResponseSuperConnectsLeftMax = 3;
+
+
+
+export const UpdateCrossoverProfileResponse = zod.object({
+  "input_text": zod.string(),
+  "remaining_builds": zod.number().int().min(updateCrossoverProfileResponseRemainingBuildsMin).max(updateCrossoverProfileResponseRemainingBuildsMax),
+  "deck_id": zod.string().nullable(),
+  "deck": zod.union([zod.object({
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(updateCrossoverProfileResponseDeckOneVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(updateCrossoverProfileResponseDeckOneVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(updateCrossoverProfileResponseDeckOneVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(updateCrossoverProfileResponseDeckOneVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(updateCrossoverProfileResponseDeckOneVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(updateCrossoverProfileResponseDeckOneVisitorProfileOneInterestsItemMax)).max(updateCrossoverProfileResponseDeckOneVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "matches": zod.array(zod.object({
+  "profile_id": zod.number().int().min(1),
+  "match_score": zod.number().int().min(updateCrossoverProfileResponseDeckOneMatchesItemMatchScoreMin).max(updateCrossoverProfileResponseDeckOneMatchesItemMatchScoreMax),
+  "why_connect": zod.string().min(updateCrossoverProfileResponseDeckOneMatchesItemWhyConnectMin).max(updateCrossoverProfileResponseDeckOneMatchesItemWhyConnectMax),
+  "icebreaker": zod.string().min(1).max(updateCrossoverProfileResponseDeckOneMatchesItemIcebreakerMax)
+})).max(updateCrossoverProfileResponseDeckOneMatchesMax),
+  "career_tip": zod.union([zod.object({
+  "field": zod.string().min(1).max(updateCrossoverProfileResponseDeckOneCareerTipOneFieldMax),
+  "reason": zod.string().min(1).max(updateCrossoverProfileResponseDeckOneCareerTipOneReasonMax),
+  "profile_id": zod.number().int().min(1)
+}),zod.null()]),
+  "insufficient_input": zod.boolean(),
+  "reason": zod.string().max(updateCrossoverProfileResponseDeckOneReasonMax).nullable()
+}),zod.null()]),
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(updateCrossoverProfileResponseVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(updateCrossoverProfileResponseVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(updateCrossoverProfileResponseVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(updateCrossoverProfileResponseVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(updateCrossoverProfileResponseVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(updateCrossoverProfileResponseVisitorProfileOneInterestsItemMax)).max(updateCrossoverProfileResponseVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "profile_confirmed": zod.boolean(),
+  "deck_order": zod.array(zod.number().int()),
+  "swipes": zod.array(zod.object({
+  "id": zod.number().int(),
+  "profile_id": zod.number().int(),
+  "direction": zod.enum(['left', 'right', 'super']),
+  "created_at": zod.string()
+})),
+  "super_connects_left": zod.number().int().min(updateCrossoverProfileResponseSuperConnectsLeftMin).max(updateCrossoverProfileResponseSuperConnectsLeftMax)
+})
+
+
+/**
+ * @summary Acknowledge the parsed card before swiping
+ */
+
+
+
+export const ConfirmCrossoverProfileBody = zod.object({
+  "deck_id": zod.string().min(1)
+})
+
+export const confirmCrossoverProfileResponseRemainingBuildsMin = 0;
+export const confirmCrossoverProfileResponseRemainingBuildsMax = 5;
+
+export const confirmCrossoverProfileResponseDeckOneVisitorProfileOneFirstNameMax = 100;
+
+export const confirmCrossoverProfileResponseDeckOneVisitorProfileOneSchoolMax = 150;
+
+export const confirmCrossoverProfileResponseDeckOneVisitorProfileOneMajorMax = 150;
+
+export const confirmCrossoverProfileResponseDeckOneVisitorProfileOneYearMax = 100;
+
+export const confirmCrossoverProfileResponseDeckOneVisitorProfileOneCareerGoalsMax = 600;
+
+export const confirmCrossoverProfileResponseDeckOneVisitorProfileOneInterestsItemMax = 100;
+
+export const confirmCrossoverProfileResponseDeckOneVisitorProfileOneInterestsMax = 12;
+
+
+export const confirmCrossoverProfileResponseDeckOneMatchesItemMatchScoreMin = 0;
+export const confirmCrossoverProfileResponseDeckOneMatchesItemMatchScoreMax = 100;
+
+export const confirmCrossoverProfileResponseDeckOneMatchesItemWhyConnectMin = 10;
+export const confirmCrossoverProfileResponseDeckOneMatchesItemWhyConnectMax = 500;
+
+export const confirmCrossoverProfileResponseDeckOneMatchesItemIcebreakerMax = 299;
+
+export const confirmCrossoverProfileResponseDeckOneMatchesMax = 10;
+
+export const confirmCrossoverProfileResponseDeckOneCareerTipOneFieldMax = 150;
+
+export const confirmCrossoverProfileResponseDeckOneCareerTipOneReasonMax = 500;
+
+
+export const confirmCrossoverProfileResponseDeckOneReasonMax = 500;
+
+export const confirmCrossoverProfileResponseVisitorProfileOneFirstNameMax = 100;
+
+export const confirmCrossoverProfileResponseVisitorProfileOneSchoolMax = 150;
+
+export const confirmCrossoverProfileResponseVisitorProfileOneMajorMax = 150;
+
+export const confirmCrossoverProfileResponseVisitorProfileOneYearMax = 100;
+
+export const confirmCrossoverProfileResponseVisitorProfileOneCareerGoalsMax = 600;
+
+export const confirmCrossoverProfileResponseVisitorProfileOneInterestsItemMax = 100;
+
+export const confirmCrossoverProfileResponseVisitorProfileOneInterestsMax = 12;
+
+export const confirmCrossoverProfileResponseSuperConnectsLeftMin = 0;
+export const confirmCrossoverProfileResponseSuperConnectsLeftMax = 3;
+
+
+
+export const ConfirmCrossoverProfileResponse = zod.object({
+  "input_text": zod.string(),
+  "remaining_builds": zod.number().int().min(confirmCrossoverProfileResponseRemainingBuildsMin).max(confirmCrossoverProfileResponseRemainingBuildsMax),
+  "deck_id": zod.string().nullable(),
+  "deck": zod.union([zod.object({
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(confirmCrossoverProfileResponseDeckOneVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(confirmCrossoverProfileResponseDeckOneVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(confirmCrossoverProfileResponseDeckOneVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(confirmCrossoverProfileResponseDeckOneVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(confirmCrossoverProfileResponseDeckOneVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(confirmCrossoverProfileResponseDeckOneVisitorProfileOneInterestsItemMax)).max(confirmCrossoverProfileResponseDeckOneVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "matches": zod.array(zod.object({
+  "profile_id": zod.number().int().min(1),
+  "match_score": zod.number().int().min(confirmCrossoverProfileResponseDeckOneMatchesItemMatchScoreMin).max(confirmCrossoverProfileResponseDeckOneMatchesItemMatchScoreMax),
+  "why_connect": zod.string().min(confirmCrossoverProfileResponseDeckOneMatchesItemWhyConnectMin).max(confirmCrossoverProfileResponseDeckOneMatchesItemWhyConnectMax),
+  "icebreaker": zod.string().min(1).max(confirmCrossoverProfileResponseDeckOneMatchesItemIcebreakerMax)
+})).max(confirmCrossoverProfileResponseDeckOneMatchesMax),
+  "career_tip": zod.union([zod.object({
+  "field": zod.string().min(1).max(confirmCrossoverProfileResponseDeckOneCareerTipOneFieldMax),
+  "reason": zod.string().min(1).max(confirmCrossoverProfileResponseDeckOneCareerTipOneReasonMax),
+  "profile_id": zod.number().int().min(1)
+}),zod.null()]),
+  "insufficient_input": zod.boolean(),
+  "reason": zod.string().max(confirmCrossoverProfileResponseDeckOneReasonMax).nullable()
+}),zod.null()]),
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(confirmCrossoverProfileResponseVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(confirmCrossoverProfileResponseVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(confirmCrossoverProfileResponseVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(confirmCrossoverProfileResponseVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(confirmCrossoverProfileResponseVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(confirmCrossoverProfileResponseVisitorProfileOneInterestsItemMax)).max(confirmCrossoverProfileResponseVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "profile_confirmed": zod.boolean(),
+  "deck_order": zod.array(zod.number().int()),
+  "swipes": zod.array(zod.object({
+  "id": zod.number().int(),
+  "profile_id": zod.number().int(),
+  "direction": zod.enum(['left', 'right', 'super']),
+  "created_at": zod.string()
+})),
+  "super_connects_left": zod.number().int().min(confirmCrossoverProfileResponseSuperConnectsLeftMin).max(confirmCrossoverProfileResponseSuperConnectsLeftMax)
+})
+
+
+/**
+ * @summary Persist the next card action without AI
+ */
+
+
+
+
+export const CreateCrossoverSwipeBody = zod.object({
+  "deck_id": zod.string().min(1),
+  "profile_id": zod.number().int().min(1),
+  "direction": zod.enum(['left', 'right', 'super'])
+})
+
+export const createCrossoverSwipeResponseRemainingBuildsMin = 0;
+export const createCrossoverSwipeResponseRemainingBuildsMax = 5;
+
+export const createCrossoverSwipeResponseDeckOneVisitorProfileOneFirstNameMax = 100;
+
+export const createCrossoverSwipeResponseDeckOneVisitorProfileOneSchoolMax = 150;
+
+export const createCrossoverSwipeResponseDeckOneVisitorProfileOneMajorMax = 150;
+
+export const createCrossoverSwipeResponseDeckOneVisitorProfileOneYearMax = 100;
+
+export const createCrossoverSwipeResponseDeckOneVisitorProfileOneCareerGoalsMax = 600;
+
+export const createCrossoverSwipeResponseDeckOneVisitorProfileOneInterestsItemMax = 100;
+
+export const createCrossoverSwipeResponseDeckOneVisitorProfileOneInterestsMax = 12;
+
+
+export const createCrossoverSwipeResponseDeckOneMatchesItemMatchScoreMin = 0;
+export const createCrossoverSwipeResponseDeckOneMatchesItemMatchScoreMax = 100;
+
+export const createCrossoverSwipeResponseDeckOneMatchesItemWhyConnectMin = 10;
+export const createCrossoverSwipeResponseDeckOneMatchesItemWhyConnectMax = 500;
+
+export const createCrossoverSwipeResponseDeckOneMatchesItemIcebreakerMax = 299;
+
+export const createCrossoverSwipeResponseDeckOneMatchesMax = 10;
+
+export const createCrossoverSwipeResponseDeckOneCareerTipOneFieldMax = 150;
+
+export const createCrossoverSwipeResponseDeckOneCareerTipOneReasonMax = 500;
+
+
+export const createCrossoverSwipeResponseDeckOneReasonMax = 500;
+
+export const createCrossoverSwipeResponseVisitorProfileOneFirstNameMax = 100;
+
+export const createCrossoverSwipeResponseVisitorProfileOneSchoolMax = 150;
+
+export const createCrossoverSwipeResponseVisitorProfileOneMajorMax = 150;
+
+export const createCrossoverSwipeResponseVisitorProfileOneYearMax = 100;
+
+export const createCrossoverSwipeResponseVisitorProfileOneCareerGoalsMax = 600;
+
+export const createCrossoverSwipeResponseVisitorProfileOneInterestsItemMax = 100;
+
+export const createCrossoverSwipeResponseVisitorProfileOneInterestsMax = 12;
+
+export const createCrossoverSwipeResponseSuperConnectsLeftMin = 0;
+export const createCrossoverSwipeResponseSuperConnectsLeftMax = 3;
+
+
+
+export const CreateCrossoverSwipeResponse = zod.object({
+  "input_text": zod.string(),
+  "remaining_builds": zod.number().int().min(createCrossoverSwipeResponseRemainingBuildsMin).max(createCrossoverSwipeResponseRemainingBuildsMax),
+  "deck_id": zod.string().nullable(),
+  "deck": zod.union([zod.object({
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(createCrossoverSwipeResponseDeckOneVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(createCrossoverSwipeResponseDeckOneVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(createCrossoverSwipeResponseDeckOneVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(createCrossoverSwipeResponseDeckOneVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(createCrossoverSwipeResponseDeckOneVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(createCrossoverSwipeResponseDeckOneVisitorProfileOneInterestsItemMax)).max(createCrossoverSwipeResponseDeckOneVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "matches": zod.array(zod.object({
+  "profile_id": zod.number().int().min(1),
+  "match_score": zod.number().int().min(createCrossoverSwipeResponseDeckOneMatchesItemMatchScoreMin).max(createCrossoverSwipeResponseDeckOneMatchesItemMatchScoreMax),
+  "why_connect": zod.string().min(createCrossoverSwipeResponseDeckOneMatchesItemWhyConnectMin).max(createCrossoverSwipeResponseDeckOneMatchesItemWhyConnectMax),
+  "icebreaker": zod.string().min(1).max(createCrossoverSwipeResponseDeckOneMatchesItemIcebreakerMax)
+})).max(createCrossoverSwipeResponseDeckOneMatchesMax),
+  "career_tip": zod.union([zod.object({
+  "field": zod.string().min(1).max(createCrossoverSwipeResponseDeckOneCareerTipOneFieldMax),
+  "reason": zod.string().min(1).max(createCrossoverSwipeResponseDeckOneCareerTipOneReasonMax),
+  "profile_id": zod.number().int().min(1)
+}),zod.null()]),
+  "insufficient_input": zod.boolean(),
+  "reason": zod.string().max(createCrossoverSwipeResponseDeckOneReasonMax).nullable()
+}),zod.null()]),
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(createCrossoverSwipeResponseVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(createCrossoverSwipeResponseVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(createCrossoverSwipeResponseVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(createCrossoverSwipeResponseVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(createCrossoverSwipeResponseVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(createCrossoverSwipeResponseVisitorProfileOneInterestsItemMax)).max(createCrossoverSwipeResponseVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "profile_confirmed": zod.boolean(),
+  "deck_order": zod.array(zod.number().int()),
+  "swipes": zod.array(zod.object({
+  "id": zod.number().int(),
+  "profile_id": zod.number().int(),
+  "direction": zod.enum(['left', 'right', 'super']),
+  "created_at": zod.string()
+})),
+  "super_connects_left": zod.number().int().min(createCrossoverSwipeResponseSuperConnectsLeftMin).max(createCrossoverSwipeResponseSuperConnectsLeftMax)
+})
+
+
+/**
+ * @summary Undo the latest swipe in the current deck without AI
+ */
+
+
+
+
+export const UndoCrossoverSwipeBody = zod.object({
+  "deck_id": zod.string().min(1),
+  "swipe_id": zod.number().int().min(1)
+})
+
+export const undoCrossoverSwipeResponseRemainingBuildsMin = 0;
+export const undoCrossoverSwipeResponseRemainingBuildsMax = 5;
+
+export const undoCrossoverSwipeResponseDeckOneVisitorProfileOneFirstNameMax = 100;
+
+export const undoCrossoverSwipeResponseDeckOneVisitorProfileOneSchoolMax = 150;
+
+export const undoCrossoverSwipeResponseDeckOneVisitorProfileOneMajorMax = 150;
+
+export const undoCrossoverSwipeResponseDeckOneVisitorProfileOneYearMax = 100;
+
+export const undoCrossoverSwipeResponseDeckOneVisitorProfileOneCareerGoalsMax = 600;
+
+export const undoCrossoverSwipeResponseDeckOneVisitorProfileOneInterestsItemMax = 100;
+
+export const undoCrossoverSwipeResponseDeckOneVisitorProfileOneInterestsMax = 12;
+
+
+export const undoCrossoverSwipeResponseDeckOneMatchesItemMatchScoreMin = 0;
+export const undoCrossoverSwipeResponseDeckOneMatchesItemMatchScoreMax = 100;
+
+export const undoCrossoverSwipeResponseDeckOneMatchesItemWhyConnectMin = 10;
+export const undoCrossoverSwipeResponseDeckOneMatchesItemWhyConnectMax = 500;
+
+export const undoCrossoverSwipeResponseDeckOneMatchesItemIcebreakerMax = 299;
+
+export const undoCrossoverSwipeResponseDeckOneMatchesMax = 10;
+
+export const undoCrossoverSwipeResponseDeckOneCareerTipOneFieldMax = 150;
+
+export const undoCrossoverSwipeResponseDeckOneCareerTipOneReasonMax = 500;
+
+
+export const undoCrossoverSwipeResponseDeckOneReasonMax = 500;
+
+export const undoCrossoverSwipeResponseVisitorProfileOneFirstNameMax = 100;
+
+export const undoCrossoverSwipeResponseVisitorProfileOneSchoolMax = 150;
+
+export const undoCrossoverSwipeResponseVisitorProfileOneMajorMax = 150;
+
+export const undoCrossoverSwipeResponseVisitorProfileOneYearMax = 100;
+
+export const undoCrossoverSwipeResponseVisitorProfileOneCareerGoalsMax = 600;
+
+export const undoCrossoverSwipeResponseVisitorProfileOneInterestsItemMax = 100;
+
+export const undoCrossoverSwipeResponseVisitorProfileOneInterestsMax = 12;
+
+export const undoCrossoverSwipeResponseSuperConnectsLeftMin = 0;
+export const undoCrossoverSwipeResponseSuperConnectsLeftMax = 3;
+
+
+
+export const UndoCrossoverSwipeResponse = zod.object({
+  "input_text": zod.string(),
+  "remaining_builds": zod.number().int().min(undoCrossoverSwipeResponseRemainingBuildsMin).max(undoCrossoverSwipeResponseRemainingBuildsMax),
+  "deck_id": zod.string().nullable(),
+  "deck": zod.union([zod.object({
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(undoCrossoverSwipeResponseDeckOneVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(undoCrossoverSwipeResponseDeckOneVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(undoCrossoverSwipeResponseDeckOneVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(undoCrossoverSwipeResponseDeckOneVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(undoCrossoverSwipeResponseDeckOneVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(undoCrossoverSwipeResponseDeckOneVisitorProfileOneInterestsItemMax)).max(undoCrossoverSwipeResponseDeckOneVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "matches": zod.array(zod.object({
+  "profile_id": zod.number().int().min(1),
+  "match_score": zod.number().int().min(undoCrossoverSwipeResponseDeckOneMatchesItemMatchScoreMin).max(undoCrossoverSwipeResponseDeckOneMatchesItemMatchScoreMax),
+  "why_connect": zod.string().min(undoCrossoverSwipeResponseDeckOneMatchesItemWhyConnectMin).max(undoCrossoverSwipeResponseDeckOneMatchesItemWhyConnectMax),
+  "icebreaker": zod.string().min(1).max(undoCrossoverSwipeResponseDeckOneMatchesItemIcebreakerMax)
+})).max(undoCrossoverSwipeResponseDeckOneMatchesMax),
+  "career_tip": zod.union([zod.object({
+  "field": zod.string().min(1).max(undoCrossoverSwipeResponseDeckOneCareerTipOneFieldMax),
+  "reason": zod.string().min(1).max(undoCrossoverSwipeResponseDeckOneCareerTipOneReasonMax),
+  "profile_id": zod.number().int().min(1)
+}),zod.null()]),
+  "insufficient_input": zod.boolean(),
+  "reason": zod.string().max(undoCrossoverSwipeResponseDeckOneReasonMax).nullable()
+}),zod.null()]),
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(undoCrossoverSwipeResponseVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(undoCrossoverSwipeResponseVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(undoCrossoverSwipeResponseVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(undoCrossoverSwipeResponseVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(undoCrossoverSwipeResponseVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(undoCrossoverSwipeResponseVisitorProfileOneInterestsItemMax)).max(undoCrossoverSwipeResponseVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "profile_confirmed": zod.boolean(),
+  "deck_order": zod.array(zod.number().int()),
+  "swipes": zod.array(zod.object({
+  "id": zod.number().int(),
+  "profile_id": zod.number().int(),
+  "direction": zod.enum(['left', 'right', 'super']),
+  "created_at": zod.string()
+})),
+  "super_connects_left": zod.number().int().min(undoCrossoverSwipeResponseSuperConnectsLeftMin).max(undoCrossoverSwipeResponseSuperConnectsLeftMax)
+})
+
+
+/**
  * @summary Build a session deck with one charged AI request
  */
 export const buildCrossoverDeckBodyInputTextMax = 1000;
@@ -148,6 +619,23 @@ export const getCrossoverStateResponseDeckOneCareerTipOneReasonMax = 500;
 
 export const getCrossoverStateResponseDeckOneReasonMax = 500;
 
+export const getCrossoverStateResponseVisitorProfileOneFirstNameMax = 100;
+
+export const getCrossoverStateResponseVisitorProfileOneSchoolMax = 150;
+
+export const getCrossoverStateResponseVisitorProfileOneMajorMax = 150;
+
+export const getCrossoverStateResponseVisitorProfileOneYearMax = 100;
+
+export const getCrossoverStateResponseVisitorProfileOneCareerGoalsMax = 600;
+
+export const getCrossoverStateResponseVisitorProfileOneInterestsItemMax = 100;
+
+export const getCrossoverStateResponseVisitorProfileOneInterestsMax = 12;
+
+export const getCrossoverStateResponseSuperConnectsLeftMin = 0;
+export const getCrossoverStateResponseSuperConnectsLeftMax = 3;
+
 
 
 export const GetCrossoverStateResponse = zod.object({
@@ -176,7 +664,24 @@ export const GetCrossoverStateResponse = zod.object({
 }),zod.null()]),
   "insufficient_input": zod.boolean(),
   "reason": zod.string().max(getCrossoverStateResponseDeckOneReasonMax).nullable()
-}),zod.null()])
+}),zod.null()]),
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(getCrossoverStateResponseVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(getCrossoverStateResponseVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(getCrossoverStateResponseVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(getCrossoverStateResponseVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(getCrossoverStateResponseVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(getCrossoverStateResponseVisitorProfileOneInterestsItemMax)).max(getCrossoverStateResponseVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "profile_confirmed": zod.boolean(),
+  "deck_order": zod.array(zod.number().int()),
+  "swipes": zod.array(zod.object({
+  "id": zod.number().int(),
+  "profile_id": zod.number().int(),
+  "direction": zod.enum(['left', 'right', 'super']),
+  "created_at": zod.string()
+})),
+  "super_connects_left": zod.number().int().min(getCrossoverStateResponseSuperConnectsLeftMin).max(getCrossoverStateResponseSuperConnectsLeftMax)
 })
 
 

@@ -8,7 +8,8 @@
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:phase2": "tsx tests/phase2.ts"
+    "test:phase2": "tsx tests/phase2.ts",
+    "test:phase3": "tsx tests/phase3.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.6.0",

@@ -76,9 +76,12 @@ export class MatchmakingService {
     await this.store.saveSession(sessionId, { input_text: raw });
     const parsed = BuildCrossoverDeckBody.strict().safeParse(body);
     const session = await this.store.session(sessionId);
-    const savedProfile = session.edited_profile ?? null;
-    const hasSavedProfile = savedProfile !== null && typeof savedProfile === "object";
-    if (!parsed.success || !hasUsefulInput(`${hasSavedProfile ? JSON.stringify(savedProfile) : ""} ${raw}`)) {
+    const saved = resultSchema.shape.visitor_profile.safeParse(session.edited_profile ?? null);
+    const savedProfile = saved.success ? saved.data : null;
+    const hasSavedProfile = !!savedProfile && !!(
+      savedProfile.school || savedProfile.major || savedProfile.career_goals.trim() || savedProfile.interests.length
+    );
+    if (!parsed.success || (!hasSavedProfile && !hasUsefulInput(raw))) {
       await this.store.log(sessionId, raw, "invalid_input", { reason: INPUT_MESSAGE });
       throw new AiActionError(400, "invalid_input", INPUT_MESSAGE);
     }
@@ -110,7 +113,10 @@ export class MatchmakingService {
       }
       const usageId = await this.store.log(sessionId, raw, "success", output);
       const deckId = randomUUID();
-      await this.store.saveSession(sessionId, { deck: output, deck_id: deckId, visitor_profile: output.visitor_profile });
+      await this.store.saveSession(sessionId, {
+        deck: output, deck_id: deckId, visitor_profile: output.visitor_profile,
+        edited_profile: output.visitor_profile, profile_confirmed_deck_id: null,
+      });
       return { usage_id: usageId, deck_id: deckId, remaining_builds: await this.store.remaining(sessionId), result: output };
     } catch (error) {
       if (error instanceof AiActionError) throw error;

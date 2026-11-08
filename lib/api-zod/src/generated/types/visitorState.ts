@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { MatchmakingResult } from './matchmakingResult';
+import type { SavedSwipe } from './savedSwipe';
+import type { VisitorProfile } from './visitorProfile';
 
 export interface VisitorState {
   input_text: string;
@@ -17,4 +19,13 @@ export interface VisitorState {
   /** @nullable */
   deck_id: string | null;
   deck: MatchmakingResult | null;
+  visitor_profile: VisitorProfile | null;
+  profile_confirmed: boolean;
+  deck_order: number[];
+  swipes: SavedSwipe[];
+  /**
+     * @minimum 0
+     * @maximum 3
+     */
+  super_connects_left: number;
 }

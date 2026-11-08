@@ -4,10 +4,12 @@ import { GetCrossoverHistoryResponse, GetCrossoverProfilesResponse } from "@work
 import { anonymousSession, parseSessionCookie } from "../middlewares/anonymous-session";
 import { redactText, redactValue } from "../lib/redact";
 import crossoverAiRouter from "./crossover-ai";
+import crossoverDeckRouter from "./crossover-deck";
 
 const router: IRouter = Router();
 router.use("/crossover", parseSessionCookie, anonymousSession);
 router.use(crossoverAiRouter);
+router.use(crossoverDeckRouter);
 router.get("/crossover/profiles", async (_req, res): Promise<void> => {
   res.json(GetCrossoverProfilesResponse.parse(await db.select().from(profiles).orderBy(profiles.id)));
 });

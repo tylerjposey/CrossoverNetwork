@@ -11,6 +11,70 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /crossover/profile:
+    patch:
+      operationId: updateCrossoverProfile
+      summary: Save profile edits to this session without changing the deck or using AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ProfileEdit"}
+      responses:
+        "200":
+          $ref: "#/components/responses/SessionState"
+        "400":
+          $ref: "#/components/responses/DeckActionError"
+        "409":
+          $ref: "#/components/responses/DeckActionError"
+  /crossover/profile/confirm:
+    post:
+      operationId: confirmCrossoverProfile
+      summary: Acknowledge the parsed card before swiping
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/DeckReference"}
+      responses:
+        "200":
+          $ref: "#/components/responses/SessionState"
+        "400":
+          $ref: "#/components/responses/DeckActionError"
+        "409":
+          $ref: "#/components/responses/DeckActionError"
+  /crossover/swipes:
+    post:
+      operationId: createCrossoverSwipe
+      summary: Persist the next card action without AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/SwipeInput"}
+      responses:
+        "200":
+          $ref: "#/components/responses/SessionState"
+        "400":
+          $ref: "#/components/responses/DeckActionError"
+        "409":
+          $ref: "#/components/responses/DeckActionError"
+  /crossover/swipes/undo:
+    post:
+      operationId: undoCrossoverSwipe
+      summary: Undo the latest swipe in the current deck without AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/SwipeUndo"}
+      responses:
+        "200":
+          $ref: "#/components/responses/SessionState"
+        "400":
+          $ref: "#/components/responses/DeckActionError"
+        "409":
+          $ref: "#/components/responses/DeckActionError"
   /crossover/deck:
     post:
       operationId: buildCrossoverDeck
@@ -104,12 +168,64 @@ paths:
                 $ref: "#/components/schemas/HealthStatus"
 components:
   responses:
+    SessionState:
+      description: Authoritative current session, including deck order and progress
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/VisitorState"}
+    DeckActionError:
+      description: Invalid or outdated deck action; refresh session state before retrying
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/DeckActionFailure"}
     FriendlyError:
       description: Friendly error; input remains saved and no raw provider errors are exposed
       content:
         application/json:
           schema: {$ref: "#/components/schemas/ActionError"}
   schemas:
+    DeckReference:
+      type: object
+      additionalProperties: false
+      required: [deck_id]
+      properties:
+        deck_id: {type: string, minLength: 1}
+    ProfileEdit:
+      type: object
+      additionalProperties: false
+      required: [deck_id, profile]
+      properties:
+        deck_id: {type: string, minLength: 1}
+        profile: {$ref: "#/components/schemas/VisitorProfile"}
+    SwipeInput:
+      type: object
+      additionalProperties: false
+      required: [deck_id, profile_id, direction]
+      properties:
+        deck_id: {type: string, minLength: 1}
+        profile_id: {type: integer, minimum: 1}
+        direction: {type: string, enum: [left, right, super]}
+    SwipeUndo:
+      type: object
+      additionalProperties: false
+      required: [deck_id, swipe_id]
+      properties:
+        deck_id: {type: string, minLength: 1}
+        swipe_id: {type: integer, minimum: 1}
+    SavedSwipe:
+      type: object
+      required: [id, profile_id, direction, created_at]
+      properties:
+        id: {type: integer}
+        profile_id: {type: integer}
+        direction: {type: string, enum: [left, right, super]}
+        created_at: {type: string}
+    DeckActionFailure:
+      type: object
+      required: [error, code]
+      properties:
+        error: {type: string}
+        code: {type: string, enum: [invalid_action, stale_deck, super_limit, confirm_profile]}
     VisitorProfile:
       type: object
       additionalProperties: false
@@ -189,7 +305,7 @@ components:
         remaining_builds: {type: integer, minimum: 0, maximum: 5}
     VisitorState:
       type: object
-      required: [input_text, remaining_builds, deck_id, deck]
+      required: [input_text, remaining_builds, deck_id, deck, visitor_profile, profile_confirmed, deck_order, swipes, super_connects_left]
       properties:
         input_text: {type: string}
         remaining_builds: {type: integer, minimum: 0, maximum: 5}
@@ -198,6 +314,18 @@ components:
           anyOf:
             - {$ref: "#/components/schemas/MatchmakingResult"}
             - {type: "null"}
+        visitor_profile:
+          anyOf:
+            - {$ref: "#/components/schemas/VisitorProfile"}
+            - {type: "null"}
+        profile_confirmed: {type: boolean}
+        deck_order:
+          type: array
+          items: {type: integer}
+        swipes:
+          type: array
+          items: {$ref: "#/components/schemas/SavedSwipe"}
+        super_connects_left: {type: integer, minimum: 0, maximum: 3}
     ActionError:
       type: object
       required: [error, code, remaining_builds]

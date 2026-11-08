@@ -5,6 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface DeckReference {
+  /** @minLength 1 */
+  deck_id: string;
+}
+
 export interface VisitorProfile {
   /**
      * @maxLength 100
@@ -33,6 +38,67 @@ export interface VisitorProfile {
      * @items.maxLength 100
      */
   interests: string[];
+}
+
+export interface ProfileEdit {
+  /** @minLength 1 */
+  deck_id: string;
+  profile: VisitorProfile;
+}
+
+export type SwipeInputDirection = typeof SwipeInputDirection[keyof typeof SwipeInputDirection];
+
+
+export const SwipeInputDirection = {
+  left: 'left',
+  right: 'right',
+  super: 'super',
+} as const;
+
+export interface SwipeInput {
+  /** @minLength 1 */
+  deck_id: string;
+  /** @minimum 1 */
+  profile_id: number;
+  direction: SwipeInputDirection;
+}
+
+export interface SwipeUndo {
+  /** @minLength 1 */
+  deck_id: string;
+  /** @minimum 1 */
+  swipe_id: number;
+}
+
+export type SavedSwipeDirection = typeof SavedSwipeDirection[keyof typeof SavedSwipeDirection];
+
+
+export const SavedSwipeDirection = {
+  left: 'left',
+  right: 'right',
+  super: 'super',
+} as const;
+
+export interface SavedSwipe {
+  id: number;
+  profile_id: number;
+  direction: SavedSwipeDirection;
+  created_at: string;
+}
+
+export type DeckActionFailureCode = typeof DeckActionFailureCode[keyof typeof DeckActionFailureCode];
+
+
+export const DeckActionFailureCode = {
+  invalid_action: 'invalid_action',
+  stale_deck: 'stale_deck',
+  super_limit: 'super_limit',
+  confirm_profile: 'confirm_profile',
+} as const;
+
+export interface DeckActionFailure {
+  error: string;
+  code: DeckActionFailureCode;
 }
 
 export interface ProfileMatch {
@@ -128,6 +194,15 @@ export interface VisitorState {
   /** @nullable */
   deck_id: string | null;
   deck: MatchmakingResult | null;
+  visitor_profile: VisitorProfile | null;
+  profile_confirmed: boolean;
+  deck_order: number[];
+  swipes: SavedSwipe[];
+  /**
+     * @minimum 0
+     * @maximum 3
+     */
+  super_connects_left: number;
 }
 
 export type ActionErrorCode = typeof ActionErrorCode[keyof typeof ActionErrorCode];
@@ -199,6 +274,16 @@ export interface HistoryPage {
 export interface HealthStatus {
   status: string;
 }
+
+/**
+ * Authoritative current session, including deck order and progress
+ */
+export type SessionStateResponse = VisitorState;
+
+/**
+ * Invalid or outdated deck action; refresh session state before retrying
+ */
+export type DeckActionErrorResponse = DeckActionFailure;
 
 /**
  * Friendly error; input remains saved and no raw provider errors are exposed

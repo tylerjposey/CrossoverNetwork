@@ -16,6 +16,7 @@ Crossover is a mobile-first career networking website with fictional sample peop
 - `pnpm --filter @workspace/api-server run test:phase2` — isolated PostgreSQL and fixture-provider tests; no paid AI calls
 - `pnpm --filter @workspace/api-server run test:phase3` — isolated profile/deck/swipe/undo persistence checks; no paid AI calls
 - `pnpm --filter @workspace/api-server run test:phase4` — isolated connection/draft/undo/rewrite checks; no paid AI calls
+- `pnpm --filter @workspace/api-server run test:phase5` — actual empty-table seeding, simulated SDK 401, multi-process quotas and redaction; no paid AI calls
 - `TZ=America/Los_Angeles node artifacts/crossover/tests/streak.ts` — defensive local streak and daylight-saving checks
 
 ## Stack
@@ -50,7 +51,7 @@ Crossover is a mobile-first career networking website with fictional sample peop
 
 ## Product
 
-Phases 1–4 provide fictional profiles, public redacted history, AI endpoints, onboarding, editable parsed cards, persistent swipes and undo, connection celebrations, session-wide Connections, saved/copyable/rewritable drafts, a real deck summary and a defensive local opening streak. The main routes are `/`, `/connections` and `/history`. Phase 5 launch checks remain subject to approval.
+Phases 1–4 provide fictional profiles, public redacted history, AI endpoints, onboarding, editable parsed cards, persistent swipes and undo, connection celebrations, session-wide Connections, saved/copyable/rewritable drafts, a real deck summary and a defensive local opening streak. The main routes are `/`, `/connections` and `/history`. Phase 5 pre-publication checks and the five-step post-publication checklist are in `docs/phase-5.md`; live-deployment verification requires the user to publish first.
 
 ## User preferences
 

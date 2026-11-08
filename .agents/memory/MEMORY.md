@@ -1,1 +1,2 @@
 - [Crossover delivery constraints](crossover-delivery.md) — website-first delivery, phase review stops, and anonymous-history privacy.
+- [Node/tsx subprocess probes](node-tsx-probes.md) — avoid module-input flags leaking into Node 24 loader workers during isolated launch checks.

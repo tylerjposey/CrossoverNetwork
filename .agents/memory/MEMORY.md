@@ -1,0 +1,1 @@
+- [Crossover delivery constraints](crossover-delivery.md) — website-first delivery, phase review stops, and anonymous-history privacy.

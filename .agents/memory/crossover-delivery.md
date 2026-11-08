@@ -7,6 +7,10 @@ Crossover launches as a mobile-friendly website, not a native Expo app.
 **Why:** The user explicitly selected the website after the attachment and initial mobile selection conflicted.
 **How to apply:** Build for public browser testing and mobile widths unless the user changes the platform.
 
+Frame Crossover broadly around connecting students and young professionals to advance their careers, not primarily around meeting people in different majors.
+**Why:** The user explicitly requested this positioning after reviewing Phase 1.
+**How to apply:** Keep cross-discipline matching as a feature, but use the broader career-connection framing in headlines and product messaging.
+
 Stop after each of the five requested build phases, explain what was built and exactly how to test it, and wait for continuation.
 **Why:** The user's product brief explicitly requires phase-by-phase stops.
 **How to apply:** Approval of the overall build plan is not permission to skip these review stops.

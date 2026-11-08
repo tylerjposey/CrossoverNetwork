@@ -53,8 +53,8 @@ function ProfileCard({ p, i }: { p: SampleProfile; i: number }) {
 
 export default function Home() {
   usePageMeta(
-    'Crossover - Meet people outside your major',
-    'Crossover is a playful career space for students and young professionals to meet across disciplines. Phase one previews fictional sample people.',
+    'Crossover - Connect and advance your career',
+    'Connect with students and young professionals who share your goals and interests, exchange ideas, and advance your career. Phase one previews fictional sample people.',
   );
   const { data, isLoading, isError, refetch, isFetching } = useGetCrossoverProfiles();
 
@@ -63,10 +63,10 @@ export default function Home() {
       <section className="rise pt-6">
         <Pill tone="yours">Phase one</Pill>
         <h1 className="mt-4 text-[40px] font-extrabold leading-[1.02] tracking-tight">
-          The best career advice is in a <span className="grad-text">different major.</span>
+          Connect with people. <span className="grad-text">Advance your career.</span>
         </h1>
         <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
-          Crossover is for students and early-career people who want to meet the nurse, the coder and the set designer they would never find in their own department. Not a directory. More of a hallway.
+          Meet students and young professionals who share your goals and interests. Exchange ideas, explore opportunities, and help each other take the next step in your careers.
         </p>
       </section>
 

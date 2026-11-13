@@ -1,5 +1,6 @@
-import { Sparkles, ArrowLeft } from 'lucide-react';
+import { Sparkles, ArrowLeft, Mic, Square } from 'lucide-react';
 import { Pill } from '@/components/crossover/shell';
+import { useDictation } from '@/hooks/use-dictation';
 
 const MAX = 1000;
 const PLACEHOLDER =
@@ -11,8 +12,9 @@ export function Onboarding({
   text: string; setText: (v: string) => void; remaining: number; onBuild: () => void; building: boolean;
   error: string | null; notice: string | null; hasDeck: boolean; onBackToDeck: () => void;
 }) {
+  const dictation = useDictation(text, setText, MAX);
   const over = text.length > MAX;
-  const disabled = building || !text.trim() || over || remaining <= 0;
+  const disabled = building || dictation.active || !text.trim() || over || remaining <= 0;
   return (
     <section className="rise pt-6">
       {hasDeck && (
@@ -45,12 +47,32 @@ export function Onboarding({
           data-testid="input-about"
           value={text}
           onChange={(e) => setText(e.target.value.slice(0, MAX))}
+          readOnly={dictation.active}
           maxLength={MAX}
           rows={7}
           placeholder={PLACEHOLDER}
-          aria-describedby="about-count about-disclosure"
+          aria-describedby="about-count about-disclosure about-dictation-status"
           className="mt-3 w-full resize-none rounded-2xl border border-input bg-background/60 p-3.5 text-[15px] leading-relaxed placeholder:text-muted-foreground/60 focus:border-[hsl(var(--ring))] focus:outline-none"
         />
+        <div className="mt-2">
+          <button
+            type="button"
+            data-testid="button-dictate"
+            aria-controls="about"
+            aria-pressed={dictation.active}
+            disabled={!dictation.supported || building || (!dictation.active && text.length >= MAX)}
+            onClick={dictation.active ? dictation.stop : dictation.start}
+            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[hsl(var(--ring))] disabled:cursor-not-allowed disabled:opacity-50 ${dictation.active ? 'border-primary bg-primary/10 text-primary' : 'border-border text-foreground hover:bg-muted'}`}
+          >
+            {dictation.active ? <Square className="h-4 w-4" aria-hidden /> : <Mic className="h-4 w-4" aria-hidden />}
+            {dictation.active ? 'Stop dictation' : 'Dictate'}
+          </button>
+          <p id="about-dictation-status" role="status" aria-live="polite" className="mt-2 text-xs leading-relaxed text-muted-foreground">
+            {dictation.message || (dictation.supported
+              ? 'Speak instead of typing. Allow microphone access when asked. Your browser may process speech online. Dictation does not use AI builds.'
+              : 'Voice dictation is not supported in this browser. You can still type, or use your keyboard’s microphone.')}
+          </p>
+        </div>
         <div className="mt-2 flex items-start justify-between gap-3">
           <p id="about-disclosure" className="text-xs leading-relaxed text-muted-foreground" data-testid="text-disclosure">
             What you enter and your results appear anonymously on the public History page. Don't include contact info.

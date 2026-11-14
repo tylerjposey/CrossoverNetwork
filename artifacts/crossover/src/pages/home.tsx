@@ -131,7 +131,7 @@ export default function Home() {
     try {
       const next = await undo.mutateAsync({ data: { deck_id: state.deck_id, swipe_id: last.id } });
       put(next);
-      if (state.deck_filter !== 'all' && next.deck_filter === 'all') {
+      if (state.deck_filter && state.deck_filter !== 'all' && next.deck_filter === 'all') {
         toast({ title: 'Showing all cards', description: 'The card you restored was outside your filter, so the full deck is back.' });
       }
       qc.setQueryData<ConnectionList>(connKey, (o) => (o ? { ...o, connections: o.connections.filter((c) => c.id !== last.id) } : o));

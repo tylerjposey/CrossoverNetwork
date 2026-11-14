@@ -117,7 +117,7 @@ export default function Home() {
     const p = profilesQ.data?.find((x) => x.id === profile_id);
     if (!conn && sw && m && p && next.deck_id) {
       conn = { id: sw.id, deck_id: next.deck_id, profile: p, visitor_profile: next.visitor_profile, match_score: m.match_score,
-        why_connect: m.why_connect, icebreaker: m.icebreaker, direction, created_at: sw.created_at, next_step: null };
+        why_connect: m.why_connect, icebreaker: m.icebreaker, direction, created_at: sw.created_at, next_step: null, reply: null };
     }
     const score = conn?.match_score ?? m?.match_score ?? 0;
     if (conn && (direction === 'super' || score >= 75)) setCelebrate(conn);

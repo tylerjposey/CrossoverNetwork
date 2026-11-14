@@ -63,7 +63,7 @@ export function Shell({ children }: { children: ReactNode }) {
         <main className="flex-1 pb-8 pt-2">{children}</main>
         <footer className="border-t border-border py-6 text-xs leading-relaxed text-muted-foreground">
           <p data-testid="text-footer-disclaimer">
-            Sample profiles are fictional. AI-written icebreakers are drafts, so read and edit before you send.
+            Sample profiles are fictional. AI-written icebreakers are drafts, so read and edit before you send. Simulated replies are AI-written examples, not messages from real people.
           </p>
           <div className="mt-3 flex gap-4">
             <Link href="/" className="underline-offset-4 hover:text-foreground hover:underline" data-testid="link-footer-home">Home</Link>

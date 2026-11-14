@@ -6,6 +6,7 @@ import {
 import { ErrorCard, Pill, Shell, usePageMeta } from '@/components/crossover/shell';
 import { IcebreakerEditor } from '@/components/crossover/icebreaker-editor';
 import { NextStepCard } from '@/components/crossover/next-step';
+import { SimulatedReply } from '@/components/crossover/simulated-reply';
 import { gradientFor, initials } from '@/lib/api-errors';
 
 function Skeleton() {
@@ -62,6 +63,7 @@ export default function Connections() {
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{c.why_connect}</p>
           <NextStepCard step={c.next_step} testId={`text-next-step-${c.id}`} />
           <IcebreakerEditor connection={c} remaining={connQ.data!.remaining_builds} />
+          <SimulatedReply connection={c} remaining={connQ.data!.remaining_builds} />
         </li>
       ))}
     </ul>

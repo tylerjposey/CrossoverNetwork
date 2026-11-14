@@ -20,7 +20,7 @@ export class ConnectionStore extends MatchmakingStore {
         ...row.match_snapshot, id: row.id, deck_id: row.deck_id,
         direction: row.direction, profile: row.profile, created_at: row.created_at.toISOString(),
       };
-      return connectionSchema.parse({ ...base, next_step: nextStep(base) });
+      return connectionSchema.parse({ ...base, next_step: nextStep(base), reply: row.match_snapshot?.reply ?? null });
     });
   }
   async get(sessionId: string, id: number, database: Queryable = this.database) {
@@ -36,6 +36,30 @@ export class ConnectionStore extends MatchmakingStore {
   async edit(sessionId: string, id: number, icebreaker: string) {
     const connection = await this.get(sessionId, id);
     return (await this.persistDraft(sessionId, connection.profile.id, icebreaker, connection.deck_id, id))!;
+  }
+  // Same lock order as swipe/undo/drafts. If the connection was undone while the
+  // AI call was in flight, nothing is written and the caller gets stale_deck.
+  async persistReply(sessionId: string, id: number, reply: { text: string; replied_to: string; created_at: string }) {
+    const client = await this.database.connect();
+    try {
+      await client.query("BEGIN");
+      const { rows: sessions } = await client.query("SELECT 1 FROM sessions WHERE id=$1 FOR UPDATE", [sessionId]);
+      if (!sessions[0]) throw new Error("Anonymous session missing");
+      const { rows } = await client.query(
+        `UPDATE swipes SET match_snapshot=jsonb_set(match_snapshot,'{reply}',$3::jsonb)
+         WHERE id=$2 AND session_id=$1 AND direction IN ('right','super') RETURNING id`,
+        [sessionId, id, JSON.stringify(reply)],
+      );
+      if (!rows[0]) throw new DeckActionError(409, "stale_deck", "That connection changed. Refresh your Connections and try again.");
+      const connection = await this.get(sessionId, id, client);
+      await client.query("COMMIT");
+      return connection;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   }
   // Lock in the same order as swipe/undo: session first, then its swipe rows.
   // A rewrite of an older deck updates its snapshot, never the new deck.

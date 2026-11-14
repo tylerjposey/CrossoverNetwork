@@ -17,6 +17,7 @@ Crossover is a mobile-first career networking website with fictional sample peop
 - `pnpm --filter @workspace/api-server run test:phase3` — isolated profile/deck/swipe/undo persistence checks; no paid AI calls
 - `pnpm --filter @workspace/api-server run test:phase4` — isolated connection/draft/undo/rewrite checks; no paid AI calls
 - `pnpm --filter @workspace/api-server run test:phase5` — actual empty-table seeding, simulated SDK 401, multi-process quotas and redaction; no paid AI calls
+- `pnpm --filter @workspace/api-server run test:phase6` — roster top-up on an already-seeded DB, deck filters, next steps and simulated replies; fixture providers only
 - `TZ=America/Los_Angeles node artifacts/crossover/tests/streak.ts` — defensive local streak and daylight-saving checks
 
 ## Stack
@@ -32,7 +33,8 @@ Crossover is a mobile-first career networking website with fictional sample peop
 
 - `artifacts/crossover` — web frontend, mounted at `/`; public history at `/history`
 - `artifacts/api-server/src/routes/crossover.ts` — sample profiles and public history API
-- `artifacts/api-server/src/lib/seed.ts` — transactional empty-table startup data seeding
+- `artifacts/api-server/src/lib/seed.ts` — transactional startup seeding: idempotent profile top-up every start, sample usage records only on an empty table
+- `artifacts/api-server/src/lib/deck-filter.ts` — AI-free deck filters; `next-step.ts` — deterministic connection next steps
 - `lib/db/src/schema` — profiles, usage log, swipes and persistent anonymous sessions
 - `lib/api-spec/openapi.yaml` — source of truth for API types
 - `artifacts/api-server/src/lib/matchmaking/config.ts` — single global daily cap constant (200), model and time/token budgets
@@ -47,11 +49,14 @@ Crossover is a mobile-first career networking website with fictional sample peop
 - Public history intentionally includes all visitors' records for cross-browser grading; redact contact information on the server.
 - AI reservations are persisted independently of usage logs. They count logical attempts, including failures and model-declared insufficient input; seeded logs and pre-AI rejections never consume quota.
 - Both quotas are reserved in one database transaction under a short global advisory lock; provider calls run outside the lock.
+- Profile seeding is a top-up keyed by first name + school + major under the seed advisory lock, so a previously seeded database gains new roster rows without duplicates and existing IDs never change. No runtime DDL.
+- Deck filters are stored per deck in session JSON and enforced by swipe validation. Undo resets the filter to All when the restored card would be hidden.
+- Simulated replies share the 5/hour visitor and 200/day global quotas (`ai_requests.kind = 'reply'`). They are stored on the connection's swipe snapshot. Asking again returns the saved reply free; only Regenerate spends a call. Replies that contain contact details are rejected and retried once within the same reservation.
 - Swipes are scoped to deck and anonymous session; session-row locking and a uniqueness constraint prevent duplicate actions. Undo checks the expected latest swipe.
 
 ## Product
 
-Phases 1–4 provide fictional profiles, public redacted history, AI endpoints, onboarding, editable parsed cards, persistent swipes and undo, connection celebrations, session-wide Connections, saved/copyable/rewritable drafts, a real deck summary and a defensive local opening streak. The main routes are `/`, `/connections` and `/history`. Phase 5 pre-publication checks and the five-step post-publication checklist are in `docs/phase-5.md`; live-deployment verification requires the user to publish first.
+Phases 1–4 provide fictional profiles, public redacted history, AI endpoints, onboarding, editable parsed cards, persistent swipes and undo, connection celebrations, session-wide Connections, saved/copyable/rewritable drafts, a real deck summary and a defensive local opening streak. Phase 6 adds a 60-person roster, AI-free deck filters and next-step suggestions, and labeled simulated replies from sample people (see `docs/phase-6.md`). The main routes are `/`, `/connections` and `/history`. Phase 5 pre-publication checks and the five-step post-publication checklist are in `docs/phase-5.md`; live-deployment verification requires the user to publish first.
 
 ## User preferences
 
@@ -62,6 +67,7 @@ Phases 1–4 provide fictional profiles, public redacted history, AI endpoints, 
 
 - History must never expose session identifiers or unredacted emails, phone numbers or URLs.
 - Sample usage entries are demonstrations, not actual AI requests, and must not consume AI quota.
+- Simulated replies must always be labeled as AI-written from fictional sample profiles, never presented as real people.
 
 ## Pointers
 

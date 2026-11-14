@@ -30,6 +30,8 @@ export const getCrossoverConnectionsResponseConnectionsItemMatchScoreMax = 100;
 
 export const getCrossoverConnectionsResponseConnectionsItemIcebreakerMax = 299;
 
+export const getCrossoverConnectionsResponseConnectionsItemReplyOneTextMax = 280;
+
 export const getCrossoverConnectionsResponseRemainingBuildsMin = 0;
 export const getCrossoverConnectionsResponseRemainingBuildsMax = 5;
 
@@ -68,7 +70,12 @@ export const GetCrossoverConnectionsResponse = zod.object({
   "kind": zod.enum(['coffee_chat', 'shared_interest', 'ask_about']),
   "title": zod.string(),
   "text": zod.string()
-}),zod.null()]).describe('Deterministic suggestion derived from saved match data; never AI-generated')
+}),zod.null()]).describe('Deterministic suggestion derived from saved match data; never AI-generated'),
+  "reply": zod.union([zod.object({
+  "text": zod.string().min(1).max(getCrossoverConnectionsResponseConnectionsItemReplyOneTextMax).describe('AI-written in the voice of a fictional sample profile; never a real person'),
+  "replied_to": zod.string().describe('The saved icebreaker this reply answers'),
+  "created_at": zod.string()
+}),zod.null()]).describe('Persisted simulated sample reply, or null before one is requested')
 })),
   "remaining_builds": zod.number().int().min(getCrossoverConnectionsResponseRemainingBuildsMin).max(getCrossoverConnectionsResponseRemainingBuildsMax)
 })
@@ -111,6 +118,8 @@ export const editCrossoverIcebreakerResponseMatchScoreMax = 100;
 
 export const editCrossoverIcebreakerResponseIcebreakerMax = 299;
 
+export const editCrossoverIcebreakerResponseReplyOneTextMax = 280;
+
 
 
 export const EditCrossoverIcebreakerResponse = zod.object({
@@ -145,7 +154,97 @@ export const EditCrossoverIcebreakerResponse = zod.object({
   "kind": zod.enum(['coffee_chat', 'shared_interest', 'ask_about']),
   "title": zod.string(),
   "text": zod.string()
-}),zod.null()]).describe('Deterministic suggestion derived from saved match data; never AI-generated')
+}),zod.null()]).describe('Deterministic suggestion derived from saved match data; never AI-generated'),
+  "reply": zod.union([zod.object({
+  "text": zod.string().min(1).max(editCrossoverIcebreakerResponseReplyOneTextMax).describe('AI-written in the voice of a fictional sample profile; never a real person'),
+  "replied_to": zod.string().describe('The saved icebreaker this reply answers'),
+  "created_at": zod.string()
+}),zod.null()]).describe('Persisted simulated sample reply, or null before one is requested')
+})
+
+
+/**
+ * @summary Get a simulated reply from the fictional sample person; uses the shared AI quotas only when a new reply is generated
+ */
+
+
+
+export const SimulateCrossoverReplyParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const SimulateCrossoverReplyBody = zod.object({
+  "regenerate": zod.boolean().optional().describe('Spend one shared AI call to replace an existing reply')
+})
+
+export const simulateCrossoverReplyResponseConnectionVisitorProfileOneFirstNameMax = 100;
+
+export const simulateCrossoverReplyResponseConnectionVisitorProfileOneSchoolMax = 150;
+
+export const simulateCrossoverReplyResponseConnectionVisitorProfileOneMajorMax = 150;
+
+export const simulateCrossoverReplyResponseConnectionVisitorProfileOneYearMax = 100;
+
+export const simulateCrossoverReplyResponseConnectionVisitorProfileOneCareerGoalsMax = 600;
+
+export const simulateCrossoverReplyResponseConnectionVisitorProfileOneInterestsItemMax = 100;
+
+export const simulateCrossoverReplyResponseConnectionVisitorProfileOneInterestsMax = 12;
+
+export const simulateCrossoverReplyResponseConnectionMatchScoreMin = 0;
+export const simulateCrossoverReplyResponseConnectionMatchScoreMax = 100;
+
+export const simulateCrossoverReplyResponseConnectionIcebreakerMax = 299;
+
+export const simulateCrossoverReplyResponseConnectionReplyOneTextMax = 280;
+
+export const simulateCrossoverReplyResponseRemainingBuildsMin = 0;
+export const simulateCrossoverReplyResponseRemainingBuildsMax = 5;
+
+
+
+export const SimulateCrossoverReplyResponse = zod.object({
+  "connection": zod.object({
+  "id": zod.number().int(),
+  "deck_id": zod.string(),
+  "profile": zod.object({
+  "id": zod.number().int(),
+  "first_name": zod.string(),
+  "school": zod.string(),
+  "major": zod.string(),
+  "year": zod.string(),
+  "headline": zod.string(),
+  "career_goals": zod.string(),
+  "interests": zod.array(zod.string()),
+  "ask_me_about": zod.string(),
+  "is_sample": zod.boolean()
+}),
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(simulateCrossoverReplyResponseConnectionVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(simulateCrossoverReplyResponseConnectionVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(simulateCrossoverReplyResponseConnectionVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(simulateCrossoverReplyResponseConnectionVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(simulateCrossoverReplyResponseConnectionVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(simulateCrossoverReplyResponseConnectionVisitorProfileOneInterestsItemMax)).max(simulateCrossoverReplyResponseConnectionVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "match_score": zod.number().int().min(simulateCrossoverReplyResponseConnectionMatchScoreMin).max(simulateCrossoverReplyResponseConnectionMatchScoreMax),
+  "why_connect": zod.string(),
+  "icebreaker": zod.string().max(simulateCrossoverReplyResponseConnectionIcebreakerMax),
+  "direction": zod.enum(['right', 'super']),
+  "created_at": zod.string(),
+  "next_step": zod.union([zod.object({
+  "kind": zod.enum(['coffee_chat', 'shared_interest', 'ask_about']),
+  "title": zod.string(),
+  "text": zod.string()
+}),zod.null()]).describe('Deterministic suggestion derived from saved match data; never AI-generated'),
+  "reply": zod.union([zod.object({
+  "text": zod.string().min(1).max(simulateCrossoverReplyResponseConnectionReplyOneTextMax).describe('AI-written in the voice of a fictional sample profile; never a real person'),
+  "replied_to": zod.string().describe('The saved icebreaker this reply answers'),
+  "created_at": zod.string()
+}),zod.null()]).describe('Persisted simulated sample reply, or null before one is requested')
+}),
+  "remaining_builds": zod.number().int().min(simulateCrossoverReplyResponseRemainingBuildsMin).max(simulateCrossoverReplyResponseRemainingBuildsMax),
+  "reused": zod.boolean().describe('True when an existing reply was returned without an AI call')
 })
 
 

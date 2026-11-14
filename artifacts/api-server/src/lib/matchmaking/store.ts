@@ -16,7 +16,7 @@ export class MatchmakingStore {
     return Math.max(0, VISITOR_HOURLY_AI_CAP - rows[0].used);
   }
 
-  async reserve(sessionId: string, kind: "deck" | "rewrite"): Promise<Reservation> {
+  async reserve(sessionId: string, kind: "deck" | "rewrite" | "reply"): Promise<Reservation> {
     const client = await this.database.connect();
     try {
       await client.query("BEGIN");

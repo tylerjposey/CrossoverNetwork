@@ -45,6 +45,32 @@ paths:
           $ref: "#/components/responses/DeckActionError"
         "409":
           $ref: "#/components/responses/DeckActionError"
+  /crossover/connections/{id}/reply:
+    post:
+      operationId: simulateCrossoverReply
+      summary: Get a simulated reply from the fictional sample person; uses the shared AI quotas only when a new reply is generated
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: integer, minimum: 1}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ReplyInput"}
+      responses:
+        "200":
+          description: Saved simulated reply (existing replies are returned without AI unless regenerate is true)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ReplyResult"}
+        "400":
+          $ref: "#/components/responses/FriendlyError"
+        "429":
+          $ref: "#/components/responses/FriendlyError"
+        "503":
+          $ref: "#/components/responses/FriendlyError"
   /crossover/profile:
     patch:
       operationId: updateCrossoverProfile
@@ -258,6 +284,25 @@ components:
         available: {type: boolean, description: False when the visitor profile lacks the fact this filter compares}
         count: {type: integer, minimum: 0, description: Cards in this deck that match}
         remaining: {type: integer, minimum: 0, description: Matching cards not yet swiped}
+    ReplyInput:
+      type: object
+      additionalProperties: false
+      properties:
+        regenerate: {type: boolean, description: Spend one shared AI call to replace an existing reply}
+    SimulatedReply:
+      type: object
+      required: [text, replied_to, created_at]
+      properties:
+        text: {type: string, minLength: 1, maxLength: 280, description: AI-written in the voice of a fictional sample profile; never a real person}
+        replied_to: {type: string, description: The saved icebreaker this reply answers}
+        created_at: {type: string}
+    ReplyResult:
+      type: object
+      required: [connection, remaining_builds, reused]
+      properties:
+        connection: {$ref: "#/components/schemas/Connection"}
+        remaining_builds: {type: integer, minimum: 0, maximum: 5}
+        reused: {type: boolean, description: True when an existing reply was returned without an AI call}
     NextStep:
       type: object
       required: [kind, title, text]
@@ -267,7 +312,7 @@ components:
         text: {type: string}
     Connection:
       type: object
-      required: [id, deck_id, profile, visitor_profile, match_score, why_connect, icebreaker, direction, created_at, next_step]
+      required: [id, deck_id, profile, visitor_profile, match_score, why_connect, icebreaker, direction, created_at, next_step, reply]
       properties:
         id: {type: integer}
         deck_id: {type: string}
@@ -285,6 +330,11 @@ components:
           description: Deterministic suggestion derived from saved match data; never AI-generated
           anyOf:
             - {$ref: "#/components/schemas/NextStep"}
+            - {type: "null"}
+        reply:
+          description: Persisted simulated sample reply, or null before one is requested
+          anyOf:
+            - {$ref: "#/components/schemas/SimulatedReply"}
             - {type: "null"}
     ConnectionList:
       type: object

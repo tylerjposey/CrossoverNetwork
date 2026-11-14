@@ -46,28 +46,22 @@ export interface DeckFilterOption {
   remaining: number;
 }
 
-export type NextStepKind = typeof NextStepKind[keyof typeof NextStepKind];
-
-
-export const NextStepKind = {
-  coffee_chat: 'coffee_chat',
-  shared_interest: 'shared_interest',
-  ask_about: 'ask_about',
-} as const;
-
-export interface NextStep {
-  kind: NextStepKind;
-  title: string;
-  text: string;
+export interface ReplyInput {
+  /** Spend one shared AI call to replace an existing reply */
+  regenerate?: boolean;
 }
 
-export type ConnectionDirection = typeof ConnectionDirection[keyof typeof ConnectionDirection];
-
-
-export const ConnectionDirection = {
-  right: 'right',
-  super: 'super',
-} as const;
+export interface SimulatedReply {
+  /**
+     * AI-written in the voice of a fictional sample profile; never a real person
+     * @minLength 1
+     * @maxLength 280
+     */
+  text: string;
+  /** The saved icebreaker this reply answers */
+  replied_to: string;
+  created_at: string;
+}
 
 export interface SampleProfile {
   id: number;
@@ -112,6 +106,29 @@ export interface VisitorProfile {
   interests: string[];
 }
 
+export type ConnectionDirection = typeof ConnectionDirection[keyof typeof ConnectionDirection];
+
+
+export const ConnectionDirection = {
+  right: 'right',
+  super: 'super',
+} as const;
+
+export type NextStepKind = typeof NextStepKind[keyof typeof NextStepKind];
+
+
+export const NextStepKind = {
+  coffee_chat: 'coffee_chat',
+  shared_interest: 'shared_interest',
+  ask_about: 'ask_about',
+} as const;
+
+export interface NextStep {
+  kind: NextStepKind;
+  title: string;
+  text: string;
+}
+
 export interface Connection {
   id: number;
   deck_id: string;
@@ -129,6 +146,19 @@ export interface Connection {
   created_at: string;
   /** Deterministic suggestion derived from saved match data; never AI-generated */
   next_step: NextStep | null;
+  /** Persisted simulated sample reply, or null before one is requested */
+  reply: SimulatedReply | null;
+}
+
+export interface ReplyResult {
+  connection: Connection;
+  /**
+     * @minimum 0
+     * @maximum 5
+     */
+  remaining_builds: number;
+  /** True when an existing reply was returned without an AI call */
+  reused: boolean;
 }
 
 export interface ConnectionList {

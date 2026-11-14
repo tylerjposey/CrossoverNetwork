@@ -1,18 +1,28 @@
 import { randomUUID } from "node:crypto";
 import { ConnectionStore } from "../connection-store";
 import { DeckActionError } from "../deck-store";
-import { BuildCrossoverDeckBody, RewriteCrossoverIcebreakerBody } from "@workspace/api-zod";
+import { BuildCrossoverDeckBody, RewriteCrossoverIcebreakerBody, SimulateCrossoverReplyBody } from "@workspace/api-zod";
 import type { Profile } from "@workspace/db";
 import { z } from "zod";
 import { MatchmakingStore } from "./store";
 import { anthropicProvider, type AiProvider, type ProviderReply } from "./provider";
 import { validateResult, resultSchema } from "./validate";
 import { hasUsefulInput, taggedData } from "./input";
-import { MATCHMAKER_SYSTEM, REWRITE_SYSTEM } from "./prompt";
+import { MATCHMAKER_SYSTEM, REPLY_SYSTEM, REWRITE_SYSTEM } from "./prompt";
+import { redactText } from "../redact";
 import {
   AI_BREAK_MESSAGE, ATTEMPT_TIMEOUT_MS, DECK_DEADLINE_MS, DECK_MAX_TOKENS,
-  INPUT_MESSAGE, REWRITE_MAX_TOKENS, VISITOR_LIMIT_MESSAGE,
+  INPUT_MESSAGE, REPLY_MAX_CHARS, REPLY_MAX_TOKENS, REWRITE_MAX_TOKENS, VISITOR_LIMIT_MESSAGE,
 } from "./config";
+
+const replySchema = z.object({ reply: z.string().trim().min(1).max(REPLY_MAX_CHARS) }).strict();
+// Reject (and retry once) rather than show "[removed]" in a demo reply. The
+// redactor covers emails/phones/URLs; handles are checked separately.
+export function parseReply(raw: string): string {
+  const { reply } = replySchema.parse(JSON.parse(raw));
+  if (redactText(reply) !== reply || /(^|[\s(])@[\w.]{2,}/.test(reply)) throw new Error("Reply contained contact details");
+  return reply;
+}
 
 export class AiActionError extends Error {
   constructor(readonly status: number, readonly code: "invalid_input" | "insufficient_input" | "visitor_limit" | "global_limit" | "ai_unavailable" | "invalid_profile", message: string) {
@@ -38,6 +48,7 @@ export class MatchmakingService {
     readonly provider: AiProvider = anthropicProvider,
     readonly reportError: (metadata: Record<string, unknown>) => void = () => {},
     readonly deckDeadlineMs = DECK_DEADLINE_MS,
+    readonly replyDeadlineMs = ATTEMPT_TIMEOUT_MS,
   ) {}
 
   private async call(system: string, user: string, maxTokens: number, deadline: number): Promise<ProviderReply> {
@@ -61,7 +72,7 @@ export class MatchmakingService {
     }
   }
 
-  private async reserve(sessionId: string, kind: "deck" | "rewrite", text: string): Promise<void> {
+  private async reserve(sessionId: string, kind: "deck" | "rewrite" | "reply", text: string): Promise<void> {
     const reservation = await this.store.reserve(sessionId, kind);
     if (!reservation.allowed) {
       await this.store.log(sessionId, text, "rate_limited", { kind, reason: reservation.reason });
@@ -164,6 +175,64 @@ export class MatchmakingService {
     } catch (error) {
       this.reportError({ stage: "rewrite_failed", ...errorMetadata(error) });
       await this.store.log(sessionId, text, "error", { kind: "rewrite", reason: AI_BREAK_MESSAGE });
+      if (error instanceof DeckActionError) {
+        throw new AiActionError(400, "invalid_profile", "That connection changed. Refresh your Connections and try again.");
+      }
+      throw new AiActionError(503, "ai_unavailable", AI_BREAK_MESSAGE);
+    }
+  }
+
+  // One simulated reply per connection, persisted on the connection's snapshot.
+  // Re-requests return the saved reply with no AI call and no quota; only an
+  // explicit regenerate spends one shared visitor/global reservation.
+  async reply(sessionId: string, connectionId: number, body: unknown) {
+    const parsed = SimulateCrossoverReplyBody.strict().safeParse(body ?? {});
+    const connections = new ConnectionStore(this.store.database);
+    const connection = parsed.success && Number.isInteger(connectionId) && connectionId > 0
+      ? await connections.get(sessionId, connectionId).catch((error) => {
+        if (error instanceof DeckActionError) return undefined;
+        throw error;
+      }) : undefined;
+    const text = `Simulated sample reply for profile ${connection?.profile.id ?? "unknown"}`;
+    if (!parsed.success || !connection) {
+      await this.store.log(sessionId, text, "invalid_input", { kind: "reply", reason: "Choose one of your saved connections." });
+      throw new AiActionError(400, "invalid_profile", "That connection changed. Refresh your Connections and try again.");
+    }
+    if (connection.reply && !parsed.data.regenerate) {
+      return { connection, remaining_builds: await this.store.remaining(sessionId), reused: true };
+    }
+    await this.reserve(sessionId, "reply", text);
+    const deadline = Date.now() + this.replyDeadlineMs;
+    try {
+      const { profile } = connection;
+      const user = taggedData("reply_context", {
+        person: { first_name: profile.first_name, school: profile.school, major: profile.major, year: profile.year,
+          headline: profile.headline, career_goals: profile.career_goals, interests: profile.interests, ask_me_about: profile.ask_me_about },
+        visitor_profile: connection.visitor_profile, why_connect: connection.why_connect,
+        visitor_message: connection.icebreaker, previous_reply: parsed.data.regenerate ? connection.reply?.text ?? null : null,
+      });
+      let reply = "";
+      let correction = "";
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const response = await this.call(REPLY_SYSTEM, user + correction, REPLY_MAX_TOKENS, deadline);
+        try {
+          if (response.stopReason !== "end_turn") throw new Error(`Incomplete reply response: ${response.stopReason}`);
+          reply = parseReply(response.text);
+          break;
+        } catch (malformed) {
+          if (attempt === 1 || Date.now() >= deadline) throw malformed;
+          this.reportError({ stage: "retrying_invalid_reply", ...errorMetadata(malformed) });
+          correction = "\n" + taggedData("correction", `Previous output was invalid, too long, or contained contact details. Return only {"reply":"..."} under ${REPLY_MAX_CHARS} characters with no contact details.`);
+        }
+      }
+      const saved = await connections.persistReply(sessionId, connection.id, {
+        text: reply, replied_to: connection.icebreaker, created_at: new Date().toISOString(),
+      });
+      await this.store.log(sessionId, text, "success", { kind: "reply", profile_id: profile.id, reply });
+      return { connection: saved, remaining_builds: await this.store.remaining(sessionId), reused: false };
+    } catch (error) {
+      this.reportError({ stage: "reply_failed", ...errorMetadata(error) });
+      await this.store.log(sessionId, text, "error", { kind: "reply", reason: AI_BREAK_MESSAGE });
       if (error instanceof DeckActionError) {
         throw new AiActionError(400, "invalid_profile", "That connection changed. Refresh your Connections and try again.");
       }

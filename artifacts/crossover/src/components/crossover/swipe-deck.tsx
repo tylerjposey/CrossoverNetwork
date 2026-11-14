@@ -26,8 +26,11 @@ export function SwipeDeck({
 
   const swiped = useMemo(() => new Set(state.swipes.map((s) => s.profile_id)), [state.swipes]);
   // The server narrows the deck; swipes outside the filter keep their place.
-  const filtered = state.deck_filter !== 'all';
-  const order = filtered || state.visible_order.length ? state.visible_order : state.deck_order;
+  // Tolerate an API that predates filters (e.g. a server not yet restarted
+  // after a deploy): fall back to the full deck instead of crashing.
+  const activeFilter: DeckFilter = state.deck_filter ?? 'all';
+  const filtered = activeFilter !== 'all' && Array.isArray(state.visible_order);
+  const order = filtered || state.visible_order?.length ? state.visible_order! : state.deck_order;
   const currentId = order.find((id) => !swiped.has(id));
   const position = order.findIndex((id) => id === currentId);
   const byId = useMemo(() => new Map(profiles.map((p) => [p.id, p])), [profiles]);
@@ -101,7 +104,7 @@ export function SwipeDeck({
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold" data-testid="text-progress">
           {Math.min(reviewed + (current ? 1 : 0), total)} of {total}
-          {filtered && <span className="sr-only"> in {FILTER_LABELS[state.deck_filter]}</span>}
+          {filtered && <span className="sr-only"> in {FILTER_LABELS[activeFilter]}</span>}
         </p>
         <div className="flex gap-1">
           <button type="button" onClick={onEditProfile} data-testid="button-open-profile" className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground"><UserRound className="h-3.5 w-3.5" aria-hidden />My card</button>
@@ -111,7 +114,7 @@ export function SwipeDeck({
       <div className="mt-2 flex gap-1" aria-hidden>
         {order.map((id) => <span key={id} className={`h-1 flex-1 rounded-full transition-colors ${swiped.has(id) ? 'grad-accent' : id === currentId ? 'bg-foreground/60' : 'bg-muted'}`} />)}
       </div>
-      <DeckFilterBar active={state.deck_filter} options={state.filter_options} disabled={locked} onChange={onFilter} />
+      <DeckFilterBar active={activeFilter} options={state.filter_options ?? []} disabled={locked} onChange={onFilter} />
 
       {current ? (
         <>
@@ -164,7 +167,7 @@ export function SwipeDeck({
       ) : filtered && hiddenLeft > 0 ? (
         <div className="rise mt-6 rounded-[28px] border border-card-border bg-card p-6 text-center" data-testid="status-filter-complete">
           <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-secondary"><Filter className="h-5 w-5" aria-hidden /></div>
-          <h2 className="mt-3 text-xl font-extrabold">You've seen everyone in {FILTER_LABELS[state.deck_filter]}</h2>
+          <h2 className="mt-3 text-xl font-extrabold">You've seen everyone in {FILTER_LABELS[activeFilter]}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{hiddenLeft} more {hiddenLeft === 1 ? 'person is' : 'people are'} waiting in your full deck.</p>
           {error && <p role="alert" className="mt-3 rounded-2xl bg-[hsl(352_85%_62%/.14)] p-3 text-sm text-[hsl(352_90%_82%)]">{error}</p>}
           <div className="mt-5 grid gap-2">

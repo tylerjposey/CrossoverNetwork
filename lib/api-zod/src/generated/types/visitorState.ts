@@ -5,6 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { DeckFilter } from './deckFilter';
+import type { DeckFilterOption } from './deckFilterOption';
 import type { DeckSummary } from './deckSummary';
 import type { MatchmakingResult } from './matchmakingResult';
 import type { SavedSwipe } from './savedSwipe';
@@ -30,4 +32,8 @@ export interface VisitorState {
      */
   super_connects_left: number;
   deck_summary: DeckSummary;
+  deck_filter: DeckFilter;
+  /** deck_order narrowed by deck_filter, same relative order */
+  visible_order: number[];
+  filter_options: DeckFilterOption[];
 }

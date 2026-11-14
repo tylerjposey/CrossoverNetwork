@@ -6,6 +6,7 @@ import type { Connection } from '@workspace/api-client-react';
 import { gradientFor, initials } from '@/lib/api-errors';
 import { IcebreakerEditor } from '@/components/crossover/icebreaker-editor';
 import { Pill } from '@/components/crossover/shell';
+import { NextStepCard } from '@/components/crossover/next-step';
 
 const COLORS = ['hsl(12 95% 64%)', 'hsl(322 85% 62%)', 'hsl(160 85% 55%)', 'hsl(45 95% 60%)', 'hsl(265 85% 72%)'];
 const BITS = Array.from({ length: 28 }, (_, i) => ({
@@ -75,6 +76,7 @@ export function Celebration({ connection, remaining, onClose }: { connection: Co
             You and <span className="font-semibold text-foreground">{p.first_name}</span> ({p.major}, {p.school}) - {connection.match_score} match
           </p>
           <p className="rise mx-auto mt-3 max-w-[34ch] text-sm leading-relaxed">{connection.why_connect}</p>
+          <div className="rise mx-auto max-w-[36ch]"><NextStepCard step={connection.next_step} testId="text-celebration-next-step" /></div>
         </div>
         <div className="rise mt-5 rounded-[24px] border border-card-border bg-card p-4 text-left">
           <IcebreakerEditor connection={connection} remaining={remaining} />

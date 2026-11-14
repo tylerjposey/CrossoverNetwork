@@ -3,6 +3,7 @@ import { GetCrossoverStateResponse } from "@workspace/api-zod";
 import { MatchmakingStore } from "./matchmaking/store";
 import { resultSchema, type MatchmakingResult } from "./matchmaking/validate";
 import { VISITOR_HOURLY_AI_CAP } from "./matchmaking/config";
+import { deckView, parseFilter, available, type DeckFilter, type FilterPerson, type Visitor } from "./deck-filter";
 
 export class DeckActionError extends Error {
   constructor(readonly status: number, readonly code: "invalid_action" | "stale_deck" | "super_limit" | "confirm_profile", message: string) {
@@ -19,6 +20,21 @@ export function deckOrder(deck: MatchmakingResult): number[] {
 }
 
 type Queryable = Pick<Pool, "query">;
+function visitorOf(session: Record<string, unknown>, deck: MatchmakingResult | null): Visitor | null {
+  const parsed = resultSchema.shape.visitor_profile.safeParse(
+    session.edited_profile ?? session.visitor_profile ?? deck?.visitor_profile ?? null,
+  );
+  return parsed.success ? parsed.data : null;
+}
+// The single source of the (possibly filtered) card order for state AND swipes.
+async function viewFor(database: Queryable, session: Record<string, unknown>, deck: MatchmakingResult, deckId: string,
+  swiped: Set<number>, requested: DeckFilter = parseFilter(session.deck_filter, deckId)) {
+  const order = deckOrder(deck);
+  const { rows } = await database.query<FilterPerson>(
+    "SELECT id,school,major,interests,career_goals FROM profiles WHERE id=ANY($1::int[])", [order],
+  );
+  return { order, ...deckView(order, requested, visitorOf(session, deck), rows, swiped) };
+}
 export class DeckStore extends MatchmakingStore {
   async state(sessionId: string, database: Queryable = this.database) {
     const { rows } = await database.query("SELECT data FROM sessions WHERE id=$1", [sessionId]);
@@ -27,9 +43,7 @@ export class DeckStore extends MatchmakingStore {
     const parsed = resultSchema.safeParse(session.deck);
     const deck = parsed.success ? parsed.data : null;
     const deckId = typeof session.deck_id === "string" && deck ? session.deck_id : null;
-    const profile = resultSchema.shape.visitor_profile.safeParse(
-      session.edited_profile ?? session.visitor_profile ?? deck?.visitor_profile ?? null,
-    );
+    const profile = visitorOf(session, deck);
     const { rows: swipes } = await database.query(
       "SELECT id,profile_id,direction,created_at,match_snapshot FROM swipes WHERE session_id=$1 AND deck_id=$2 ORDER BY id",
       [sessionId, deckId],
@@ -55,11 +69,12 @@ export class DeckStore extends MatchmakingStore {
         shared.set(key, { label, count: (existing?.count ?? 0) + 1 });
       }
     }
+    const view = deck && deckId ? await viewFor(database, session, deck, deckId, new Set(swipes.map((s) => s.profile_id))) : null;
     const top = [...shared.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))[0];
     return GetCrossoverStateResponse.parse({
       input_text: typeof session.input_text === "string" ? session.input_text : "",
       remaining_builds: Math.max(0, VISITOR_HOURLY_AI_CAP - reservations[0].used),
-      deck_id: deckId, deck, visitor_profile: profile.success ? profile.data : null,
+      deck_id: deckId, deck, visitor_profile: profile,
       profile_confirmed: !!deckId && session.profile_confirmed_deck_id === deckId,
       deck_order: deck ? deckOrder(deck) : [],
       swipes: swipes.map((row) => ({
@@ -67,6 +82,9 @@ export class DeckStore extends MatchmakingStore {
       })),
       super_connects_left: Math.max(0, 3 - swipes.filter((s) => s.direction === "super").length),
       deck_summary: { connections_made: connected.length, top_shared_interest: top?.label ?? null },
+      deck_filter: view?.filter ?? "all",
+      visible_order: view?.visible ?? [],
+      filter_options: view?.options ?? [],
     });
   }
 
@@ -126,7 +144,8 @@ export class DeckStore extends MatchmakingStore {
       );
       const previous = rows.find((s) => s.profile_id === profileId);
       if (previous?.direction === direction) return; // Safe replay after a lost response.
-      const next = deckOrder(deck).find((id) => !rows.some((s) => s.profile_id === id));
+      const view = await viewFor(client, session, deck, deckId, new Set(rows.map((s) => s.profile_id)));
+      const next = view.visible.find((id) => !rows.some((s) => s.profile_id === id));
       if (next !== profileId || previous) {
         throw new DeckActionError(409, "invalid_action", "That card has already changed. Refresh your deck and try again.");
       }
@@ -143,15 +162,33 @@ export class DeckStore extends MatchmakingStore {
     });
   }
 
+  // Filters never touch swipes: they only choose which unswiped card is next.
+  async setFilter(sessionId: string, deckId: string, filter: DeckFilter) {
+    return this.change(sessionId, deckId, async (client, session, deck) => {
+      if (!available(filter, visitorOf(session, deck))) {
+        throw new DeckActionError(400, "invalid_action", "That filter needs a little more on your card. Add it under My card.");
+      }
+      await client.query("UPDATE sessions SET data=data || $2::jsonb WHERE id=$1",
+        [sessionId, JSON.stringify({ deck_filter: { deck_id: deckId, filter } })]);
+    });
+  }
+
   async undo(sessionId: string, deckId: string, swipeId: number) {
-    return this.change(sessionId, deckId, async (client) => {
+    return this.change(sessionId, deckId, async (client, session, deck) => {
       const { rows } = await client.query(
-        "SELECT id FROM swipes WHERE session_id=$1 AND deck_id=$2 ORDER BY id DESC LIMIT 1", [sessionId, deckId],
+        "SELECT id,profile_id FROM swipes WHERE session_id=$1 AND deck_id=$2 ORDER BY id DESC LIMIT 1", [sessionId, deckId],
       );
       if (rows[0]?.id !== swipeId) {
         throw new DeckActionError(409, "invalid_action", "Your last swipe changed. Refresh your deck before undoing.");
       }
       await client.query("DELETE FROM swipes WHERE id=$1 AND session_id=$2 AND deck_id=$3", [swipeId, sessionId, deckId]);
+      // The restored card must be visible again; if the active filter hides it,
+      // fall back to the whole deck in the same transaction.
+      const view = await viewFor(client, session, deck, deckId, new Set());
+      if (!view.visible.includes(rows[0].profile_id)) {
+        await client.query("UPDATE sessions SET data=data || $2::jsonb WHERE id=$1",
+          [sessionId, JSON.stringify({ deck_filter: { deck_id: deckId, filter: "all" } })]);
+      }
     });
   }
 }

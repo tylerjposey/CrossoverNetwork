@@ -2,6 +2,7 @@ import type { Pool } from "pg";
 import { GetCrossoverConnectionsResponse } from "@workspace/api-zod";
 import { DeckActionError } from "./deck-store";
 import { MatchmakingStore } from "./matchmaking/store";
+import { nextStep } from "./next-step";
 
 const connectionSchema = GetCrossoverConnectionsResponse.shape.connections.element;
 type Queryable = Pick<Pool, "query">;
@@ -14,10 +15,13 @@ export class ConnectionStore extends MatchmakingStore {
          AND ($2::int IS NULL OR s.id=$2)
        ORDER BY s.id DESC`, [sessionId, id ?? null],
     );
-    return rows.map((row) => connectionSchema.parse({
-      ...row.match_snapshot, id: row.id, deck_id: row.deck_id,
-      direction: row.direction, profile: row.profile, created_at: row.created_at.toISOString(),
-    }));
+    return rows.map((row) => {
+      const base = {
+        ...row.match_snapshot, id: row.id, deck_id: row.deck_id,
+        direction: row.direction, profile: row.profile, created_at: row.created_at.toISOString(),
+      };
+      return connectionSchema.parse({ ...base, next_step: nextStep(base) });
+    });
   }
   async get(sessionId: string, id: number, database: Queryable = this.database) {
     const connection = (await this.connections(sessionId, database, id))[0];

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ConnectionDirection } from './connectionDirection';
+import type { NextStep } from './nextStep';
 import type { SampleProfile } from './sampleProfile';
 import type { VisitorProfile } from './visitorProfile';
 
@@ -24,4 +25,6 @@ export interface Connection {
   icebreaker: string;
   direction: ConnectionDirection;
   created_at: string;
+  /** Deterministic suggestion derived from saved match data; never AI-generated */
+  next_step: NextStep | null;
 }

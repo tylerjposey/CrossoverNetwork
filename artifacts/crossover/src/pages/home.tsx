@@ -4,7 +4,7 @@ import {
   useGetCrossoverState, getGetCrossoverStateQueryKey, useGetCrossoverProfiles, getGetCrossoverProfilesQueryKey,
   getGetCrossoverHistoryQueryKey, useBuildCrossoverDeck, useUpdateCrossoverProfile, useConfirmCrossoverProfile,
   useCreateCrossoverSwipe, useUndoCrossoverSwipe, useGetCrossoverConnections, getGetCrossoverConnectionsQueryKey,
-  type Connection, type ConnectionList, type VisitorProfile, type VisitorState,
+  useSetCrossoverDeckFilter, type Connection, type ConnectionList, type DeckFilter, type VisitorProfile, type VisitorState,
 } from '@workspace/api-client-react';
 import { ErrorCard, Shell, usePageMeta } from '@/components/crossover/shell';
 import { Onboarding } from '@/components/crossover/onboarding';
@@ -52,6 +52,7 @@ export default function Home() {
   const confirm = useConfirmCrossoverProfile();
   const swipe = useCreateCrossoverSwipe();
   const undo = useUndoCrossoverSwipe();
+  const filter = useSetCrossoverDeckFilter();
 
   const [mode, setMode] = useState<Mode>('auto');
   const [text, setText] = useState('');
@@ -116,7 +117,7 @@ export default function Home() {
     const p = profilesQ.data?.find((x) => x.id === profile_id);
     if (!conn && sw && m && p && next.deck_id) {
       conn = { id: sw.id, deck_id: next.deck_id, profile: p, visitor_profile: next.visitor_profile, match_score: m.match_score,
-        why_connect: m.why_connect, icebreaker: m.icebreaker, direction, created_at: sw.created_at };
+        why_connect: m.why_connect, icebreaker: m.icebreaker, direction, created_at: sw.created_at, next_step: null };
     }
     const score = conn?.match_score ?? m?.match_score ?? 0;
     if (conn && (direction === 'super' || score >= 75)) setCelebrate(conn);
@@ -128,11 +129,22 @@ export default function Home() {
     if (!state?.deck_id || !last) return;
     setDeckErr(null);
     try {
-      put(await undo.mutateAsync({ data: { deck_id: state.deck_id, swipe_id: last.id } }));
+      const next = await undo.mutateAsync({ data: { deck_id: state.deck_id, swipe_id: last.id } });
+      put(next);
+      if (state.deck_filter !== 'all' && next.deck_filter === 'all') {
+        toast({ title: 'Showing all cards', description: 'The card you restored was outside your filter, so the full deck is back.' });
+      }
       qc.setQueryData<ConnectionList>(connKey, (o) => (o ? { ...o, connections: o.connections.filter((c) => c.id !== last.id) } : o));
       if (celebrate?.id === last.id) setCelebrate(null);
       void qc.invalidateQueries({ queryKey: connKey });
     }
+    catch (e) { handle(e, setDeckErr); }
+  };
+
+  const onFilter = async (f: DeckFilter) => {
+    if (!state?.deck_id) return;
+    setDeckErr(null);
+    try { put(await filter.mutateAsync({ data: { deck_id: state.deck_id, filter: f } })); }
     catch (e) { handle(e, setDeckErr); }
   };
 
@@ -159,8 +171,8 @@ export default function Home() {
     else if (profilesQ.isError || !profilesQ.data) body = <div className="pt-6"><ErrorCard message="We could not load your deck's people." onRetry={() => profilesQ.refetch()} retrying={profilesQ.isFetching} /></div>;
     else {
       body = (
-        <SwipeDeck state={state} profiles={profilesQ.data} onSwipe={onSwipe} onUndo={onUndo}
-          pending={swipe.isPending || undo.isPending} error={deckErr}
+        <SwipeDeck state={state} profiles={profilesQ.data} onSwipe={onSwipe} onUndo={onUndo} onFilter={(f) => void onFilter(f)}
+          pending={swipe.isPending || undo.isPending || filter.isPending} error={deckErr}
           onEditProfile={() => { setProfileErr(null); setMode('profile'); }} onEditInput={() => setMode('input')} />
       );
     }

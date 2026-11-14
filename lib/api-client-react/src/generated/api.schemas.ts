@@ -13,6 +13,54 @@ export interface IcebreakerEdit {
   icebreaker: string;
 }
 
+export type DeckFilter = typeof DeckFilter[keyof typeof DeckFilter];
+
+
+export const DeckFilter = {
+  all: 'all',
+  other_schools: 'other_schools',
+  other_majors: 'other_majors',
+  shared_interests: 'shared_interests',
+  similar_goals: 'similar_goals',
+} as const;
+
+export interface DeckFilterInput {
+  /** @minLength 1 */
+  deck_id: string;
+  filter: DeckFilter;
+}
+
+export interface DeckFilterOption {
+  id: DeckFilter;
+  /** False when the visitor profile lacks the fact this filter compares */
+  available: boolean;
+  /**
+     * Cards in this deck that match
+     * @minimum 0
+     */
+  count: number;
+  /**
+     * Matching cards not yet swiped
+     * @minimum 0
+     */
+  remaining: number;
+}
+
+export type NextStepKind = typeof NextStepKind[keyof typeof NextStepKind];
+
+
+export const NextStepKind = {
+  coffee_chat: 'coffee_chat',
+  shared_interest: 'shared_interest',
+  ask_about: 'ask_about',
+} as const;
+
+export interface NextStep {
+  kind: NextStepKind;
+  title: string;
+  text: string;
+}
+
 export type ConnectionDirection = typeof ConnectionDirection[keyof typeof ConnectionDirection];
 
 
@@ -79,6 +127,8 @@ export interface Connection {
   icebreaker: string;
   direction: ConnectionDirection;
   created_at: string;
+  /** Deterministic suggestion derived from saved match data; never AI-generated */
+  next_step: NextStep | null;
 }
 
 export interface ConnectionList {
@@ -270,6 +320,10 @@ export interface VisitorState {
      */
   super_connects_left: number;
   deck_summary: DeckSummary;
+  deck_filter: DeckFilter;
+  /** deck_order narrowed by deck_filter, same relative order */
+  visible_order: number[];
+  filter_options: DeckFilterOption[];
 }
 
 export type ActionErrorCode = typeof ActionErrorCode[keyof typeof ActionErrorCode];

@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import {
   UpdateCrossoverProfileBody, ConfirmCrossoverProfileBody,
-  CreateCrossoverSwipeBody, UndoCrossoverSwipeBody,
+  CreateCrossoverSwipeBody, UndoCrossoverSwipeBody, SetCrossoverDeckFilterBody,
   EditCrossoverIcebreakerBody, EditCrossoverIcebreakerParams, EditCrossoverIcebreakerResponse,
 } from "@workspace/api-zod";
 import { DeckActionError, DeckStore } from "../lib/deck-store";
@@ -39,6 +39,11 @@ router.post("/crossover/swipes", async (req, res): Promise<void> => {
   const parsed = CreateCrossoverSwipeBody.strict().safeParse(req.body);
   check(parsed);
   res.json(await store.swipe(res.locals.sessionId, parsed.data.deck_id, parsed.data.profile_id, parsed.data.direction));
+});
+router.post("/crossover/deck/filter", async (req, res): Promise<void> => {
+  const parsed = SetCrossoverDeckFilterBody.strict().safeParse(req.body);
+  check(parsed);
+  res.json(await store.setFilter(res.locals.sessionId, parsed.data.deck_id, parsed.data.filter));
 });
 router.post("/crossover/swipes/undo", async (req, res): Promise<void> => {
   const parsed = UndoCrossoverSwipeBody.strict().safeParse(req.body);

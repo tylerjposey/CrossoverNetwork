@@ -10,6 +10,7 @@ import { AiActionError, MatchmakingService } from "../src/lib/matchmaking/servic
 import { MatchmakingStore } from "../src/lib/matchmaking/store";
 import { AI_BREAK_MESSAGE } from "../src/lib/matchmaking/config";
 import { redactText, redactValue } from "../src/lib/redact";
+import { sampleProfiles } from "../src/lib/sample-profiles";
 
 const run = promisify(execFile);
 const schema = `crossover_launch_test_${randomUUID().replaceAll("-", "")}`;
@@ -19,6 +20,9 @@ try {
   for (const table of ["profiles", "usage_log", "sessions", "ai_requests", "swipes"]) {
     await pool.query(`CREATE TABLE ${schema}.${table} (LIKE public.${table} INCLUDING ALL)`);
   }
+  // Own sequence: isolated seeding must not advance the shared profiles ID sequence.
+  await pool.query(`CREATE SEQUENCE ${schema}.profiles_id_seq`);
+  await pool.query(`ALTER TABLE ${schema}.profiles ALTER COLUMN id SET DEFAULT nextval('${schema}.profiles_id_seq')`);
   // New processes exercise the actual startup seeder and advisory locking.
   // Only the child search_path changes; the existing database/key are untouched.
   const seed = async () => run(process.execPath, ["--import", "tsx", "-e",
@@ -28,14 +32,15 @@ try {
   let counts = (await database.query(
     "SELECT (SELECT COUNT(*)::int FROM profiles) AS people,(SELECT COUNT(*)::int FROM usage_log) AS logs",
   )).rows[0];
-  assert.deepEqual(counts, { people: 30, logs: 10 });
-  assert.equal((await database.query("SELECT COUNT(DISTINCT school)::int AS n FROM profiles")).rows[0].n >= 20, true);
+  assert.deepEqual(counts, { people: sampleProfiles.length, logs: 10 });
+  assert.equal(sampleProfiles.length, 60);
+  assert.equal((await database.query("SELECT COUNT(DISTINCT school)::int AS n FROM profiles")).rows[0].n >= 40, true);
   assert.equal((await database.query("SELECT COUNT(*)::int AS n FROM profiles WHERE is_sample=false")).rows[0].n, 0);
   assert.equal((await database.query("SELECT COUNT(*)::int AS n FROM usage_log WHERE is_sample=false")).rows[0].n, 0);
   await seed();
   counts = (await database.query("SELECT (SELECT COUNT(*)::int FROM profiles) AS people,(SELECT COUNT(*)::int FROM usage_log) AS logs")).rows[0];
-  assert.deepEqual(counts, { people: 30, logs: 10 });
-  console.log("PASS real seeder on isolated empty tables: 30 fictional profiles, 20+ schools, 10 labeled logs, concurrent/restarted startup without duplicates");
+  assert.deepEqual(counts, { people: sampleProfiles.length, logs: 10 });
+  console.log("PASS real seeder on isolated empty tables: 60 fictional profiles, 40+ schools, 10 labeled logs, concurrent/restarted startup without duplicates");
 
   let sdkCalls = 0;
   const sdk = new Anthropic({

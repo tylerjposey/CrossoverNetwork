@@ -17,7 +17,7 @@ const aliases: Record<string, string> = {
   "management information systems": "mis",
   "computer science": "cs",
 };
-const normalize = (value: string) => {
+export const normalize = (value: string) => {
   let s = value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
   for (const [long, short] of Object.entries(aliases)) s = s.replaceAll(long, short);
   return s.replace(/[^\p{L}\p{N}]+/gu, " ").trim();

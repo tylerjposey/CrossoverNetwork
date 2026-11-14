@@ -17,13 +17,21 @@ const scenarios = [
 
 // A transaction-scoped lock prevents duplicate seeds across server instances.
 // DML only: production schema is applied by Replit's Publish flow.
+// Profiles are topped up on EVERY start, not only on empty tables: each sample
+// row is inserted only when no row with the same first name + school + major
+// exists. Existing rows (and their IDs, swipes and snapshots) are never touched,
+// so an already-seeded database gains the newer roster without duplicates.
 export async function seedIfEmpty(): Promise<void> {
   await db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(87309121)`);
-    if (!(await tx.select({ id: profiles.id }).from(profiles).limit(1)).length) {
-      await tx.insert(profiles).values(sampleProfiles);
-      logger.info("Seeded 30 fictional sample profiles");
-    }
+    // The advisory lock serializes every seeder, so read-then-insert is safe.
+    const existing = await tx.select({ first_name: profiles.first_name, school: profiles.school, major: profiles.major }).from(profiles);
+    const key = (p: { first_name: string; school: string; major: string }) => `${p.first_name}\u0000${p.school}\u0000${p.major}`;
+    const present = new Set(existing.map(key));
+    const missing = sampleProfiles.filter((p) => !present.has(key(p)));
+    if (missing.length) await tx.insert(profiles).values(missing);
+    const added = missing.length;
+    if (added) logger.info({ added }, "Added fictional sample profiles");
     if ((await tx.select({ id: usageLog.id }).from(usageLog).limit(1)).length) return;
     const all = await tx.select().from(profiles).orderBy(profiles.id);
     await tx.insert(usageLog).values(scenarios.map(([name, school, major, goal, interest, secondInterest], i) => {

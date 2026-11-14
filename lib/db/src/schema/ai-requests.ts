@@ -5,7 +5,8 @@ import { createInsertSchema } from "drizzle-zod";
 export const aiRequests = pgTable("ai_requests", {
   id: uuid("id").primaryKey(),
   session_id: text("session_id").notNull(),
-  kind: text("kind", { enum: ["deck", "rewrite"] }).notNull(),
+  // Text column (no DB constraint): adding a kind needs no migration.
+  kind: text("kind", { enum: ["deck", "rewrite", "reply"] }).notNull(),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   index("ai_requests_created_idx").on(t.created_at),

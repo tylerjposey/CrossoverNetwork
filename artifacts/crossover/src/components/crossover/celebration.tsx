@@ -6,6 +6,8 @@ import type { Connection } from '@workspace/api-client-react';
 import { gradientFor, initials } from '@/lib/api-errors';
 import { IcebreakerEditor } from '@/components/crossover/icebreaker-editor';
 import { Pill } from '@/components/crossover/shell';
+import { NextStepCard } from '@/components/crossover/next-step';
+import { SimulatedReply } from '@/components/crossover/simulated-reply';
 
 const COLORS = ['hsl(12 95% 64%)', 'hsl(322 85% 62%)', 'hsl(160 85% 55%)', 'hsl(45 95% 60%)', 'hsl(265 85% 72%)'];
 const BITS = Array.from({ length: 28 }, (_, i) => ({
@@ -75,15 +77,17 @@ export function Celebration({ connection, remaining, onClose }: { connection: Co
             You and <span className="font-semibold text-foreground">{p.first_name}</span> ({p.major}, {p.school}) - {connection.match_score} match
           </p>
           <p className="rise mx-auto mt-3 max-w-[34ch] text-sm leading-relaxed">{connection.why_connect}</p>
+          <div className="rise mx-auto max-w-[36ch]"><NextStepCard step={connection.next_step} testId="text-celebration-next-step" /></div>
         </div>
         <div className="rise mt-5 rounded-[24px] border border-card-border bg-card p-4 text-left">
           <IcebreakerEditor connection={connection} remaining={remaining} />
+          <SimulatedReply connection={connection} remaining={remaining} />
         </div>
         <button ref={btn} type="button" onClick={onClose} data-testid="button-celebration-continue"
           className="grad-accent mt-5 w-full rounded-full py-3 text-sm font-bold text-[hsl(250_30%_8%)] transition-transform active:scale-[.98]">Continue swiping</button>
         <Link href="/connections" className="mt-2 block rounded-full py-2 text-center text-sm font-semibold text-muted-foreground hover:text-foreground" data-testid="link-celebration-connections">See all connections</Link>
         <footer className="mt-4 border-t border-border py-5 text-xs leading-relaxed text-muted-foreground">
-          <p data-testid="text-celebration-disclaimer">Sample profiles are fictional. AI-written icebreakers are drafts, so read and edit before you send.</p>
+          <p data-testid="text-celebration-disclaimer">Sample profiles are fictional. AI-written icebreakers are drafts, so read and edit before you send. Simulated replies are AI-written examples, not messages from real people.</p>
           <Link href="/history" className="mt-2 inline-block underline-offset-4 hover:text-foreground hover:underline" data-testid="link-celebration-history">History</Link>
         </footer>
       </div>

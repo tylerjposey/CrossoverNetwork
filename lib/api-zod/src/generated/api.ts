@@ -30,6 +30,8 @@ export const getCrossoverConnectionsResponseConnectionsItemMatchScoreMax = 100;
 
 export const getCrossoverConnectionsResponseConnectionsItemIcebreakerMax = 299;
 
+export const getCrossoverConnectionsResponseConnectionsItemReplyOneTextMax = 280;
+
 export const getCrossoverConnectionsResponseRemainingBuildsMin = 0;
 export const getCrossoverConnectionsResponseRemainingBuildsMax = 5;
 
@@ -63,7 +65,17 @@ export const GetCrossoverConnectionsResponse = zod.object({
   "why_connect": zod.string(),
   "icebreaker": zod.string().max(getCrossoverConnectionsResponseConnectionsItemIcebreakerMax),
   "direction": zod.enum(['right', 'super']),
+  "created_at": zod.string(),
+  "next_step": zod.union([zod.object({
+  "kind": zod.enum(['coffee_chat', 'shared_interest', 'ask_about']),
+  "title": zod.string(),
+  "text": zod.string()
+}),zod.null()]).describe('Deterministic suggestion derived from saved match data; never AI-generated'),
+  "reply": zod.union([zod.object({
+  "text": zod.string().min(1).max(getCrossoverConnectionsResponseConnectionsItemReplyOneTextMax).describe('AI-written in the voice of a fictional sample profile; never a real person'),
+  "replied_to": zod.string().describe('The saved icebreaker this reply answers'),
   "created_at": zod.string()
+}),zod.null()]).describe('Persisted simulated sample reply, or null before one is requested')
 })),
   "remaining_builds": zod.number().int().min(getCrossoverConnectionsResponseRemainingBuildsMin).max(getCrossoverConnectionsResponseRemainingBuildsMax)
 })
@@ -106,6 +118,8 @@ export const editCrossoverIcebreakerResponseMatchScoreMax = 100;
 
 export const editCrossoverIcebreakerResponseIcebreakerMax = 299;
 
+export const editCrossoverIcebreakerResponseReplyOneTextMax = 280;
+
 
 
 export const EditCrossoverIcebreakerResponse = zod.object({
@@ -135,7 +149,102 @@ export const EditCrossoverIcebreakerResponse = zod.object({
   "why_connect": zod.string(),
   "icebreaker": zod.string().max(editCrossoverIcebreakerResponseIcebreakerMax),
   "direction": zod.enum(['right', 'super']),
+  "created_at": zod.string(),
+  "next_step": zod.union([zod.object({
+  "kind": zod.enum(['coffee_chat', 'shared_interest', 'ask_about']),
+  "title": zod.string(),
+  "text": zod.string()
+}),zod.null()]).describe('Deterministic suggestion derived from saved match data; never AI-generated'),
+  "reply": zod.union([zod.object({
+  "text": zod.string().min(1).max(editCrossoverIcebreakerResponseReplyOneTextMax).describe('AI-written in the voice of a fictional sample profile; never a real person'),
+  "replied_to": zod.string().describe('The saved icebreaker this reply answers'),
   "created_at": zod.string()
+}),zod.null()]).describe('Persisted simulated sample reply, or null before one is requested')
+})
+
+
+/**
+ * @summary Get a simulated reply from the fictional sample person; uses the shared AI quotas only when a new reply is generated
+ */
+
+
+
+export const SimulateCrossoverReplyParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const SimulateCrossoverReplyBody = zod.object({
+  "regenerate": zod.boolean().optional().describe('Spend one shared AI call to replace an existing reply')
+})
+
+export const simulateCrossoverReplyResponseConnectionVisitorProfileOneFirstNameMax = 100;
+
+export const simulateCrossoverReplyResponseConnectionVisitorProfileOneSchoolMax = 150;
+
+export const simulateCrossoverReplyResponseConnectionVisitorProfileOneMajorMax = 150;
+
+export const simulateCrossoverReplyResponseConnectionVisitorProfileOneYearMax = 100;
+
+export const simulateCrossoverReplyResponseConnectionVisitorProfileOneCareerGoalsMax = 600;
+
+export const simulateCrossoverReplyResponseConnectionVisitorProfileOneInterestsItemMax = 100;
+
+export const simulateCrossoverReplyResponseConnectionVisitorProfileOneInterestsMax = 12;
+
+export const simulateCrossoverReplyResponseConnectionMatchScoreMin = 0;
+export const simulateCrossoverReplyResponseConnectionMatchScoreMax = 100;
+
+export const simulateCrossoverReplyResponseConnectionIcebreakerMax = 299;
+
+export const simulateCrossoverReplyResponseConnectionReplyOneTextMax = 280;
+
+export const simulateCrossoverReplyResponseRemainingBuildsMin = 0;
+export const simulateCrossoverReplyResponseRemainingBuildsMax = 5;
+
+
+
+export const SimulateCrossoverReplyResponse = zod.object({
+  "connection": zod.object({
+  "id": zod.number().int(),
+  "deck_id": zod.string(),
+  "profile": zod.object({
+  "id": zod.number().int(),
+  "first_name": zod.string(),
+  "school": zod.string(),
+  "major": zod.string(),
+  "year": zod.string(),
+  "headline": zod.string(),
+  "career_goals": zod.string(),
+  "interests": zod.array(zod.string()),
+  "ask_me_about": zod.string(),
+  "is_sample": zod.boolean()
+}),
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(simulateCrossoverReplyResponseConnectionVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(simulateCrossoverReplyResponseConnectionVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(simulateCrossoverReplyResponseConnectionVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(simulateCrossoverReplyResponseConnectionVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(simulateCrossoverReplyResponseConnectionVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(simulateCrossoverReplyResponseConnectionVisitorProfileOneInterestsItemMax)).max(simulateCrossoverReplyResponseConnectionVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "match_score": zod.number().int().min(simulateCrossoverReplyResponseConnectionMatchScoreMin).max(simulateCrossoverReplyResponseConnectionMatchScoreMax),
+  "why_connect": zod.string(),
+  "icebreaker": zod.string().max(simulateCrossoverReplyResponseConnectionIcebreakerMax),
+  "direction": zod.enum(['right', 'super']),
+  "created_at": zod.string(),
+  "next_step": zod.union([zod.object({
+  "kind": zod.enum(['coffee_chat', 'shared_interest', 'ask_about']),
+  "title": zod.string(),
+  "text": zod.string()
+}),zod.null()]).describe('Deterministic suggestion derived from saved match data; never AI-generated'),
+  "reply": zod.union([zod.object({
+  "text": zod.string().min(1).max(simulateCrossoverReplyResponseConnectionReplyOneTextMax).describe('AI-written in the voice of a fictional sample profile; never a real person'),
+  "replied_to": zod.string().describe('The saved icebreaker this reply answers'),
+  "created_at": zod.string()
+}),zod.null()]).describe('Persisted simulated sample reply, or null before one is requested')
+}),
+  "remaining_builds": zod.number().int().min(simulateCrossoverReplyResponseRemainingBuildsMin).max(simulateCrossoverReplyResponseRemainingBuildsMax),
+  "reused": zod.boolean().describe('True when an existing reply was returned without an AI call')
 })
 
 
@@ -225,6 +334,10 @@ export const updateCrossoverProfileResponseSuperConnectsLeftMax = 3;
 
 export const updateCrossoverProfileResponseDeckSummaryConnectionsMadeMin = 0;
 
+export const updateCrossoverProfileResponseFilterOptionsItemCountMin = 0;
+
+export const updateCrossoverProfileResponseFilterOptionsItemRemainingMin = 0;
+
 
 
 export const UpdateCrossoverProfileResponse = zod.object({
@@ -274,7 +387,15 @@ export const UpdateCrossoverProfileResponse = zod.object({
   "deck_summary": zod.object({
   "connections_made": zod.number().int().min(updateCrossoverProfileResponseDeckSummaryConnectionsMadeMin),
   "top_shared_interest": zod.string().nullable()
-})
+}),
+  "deck_filter": zod.enum(['all', 'other_schools', 'other_majors', 'shared_interests', 'similar_goals']),
+  "visible_order": zod.array(zod.number().int()).describe('deck_order narrowed by deck_filter, same relative order'),
+  "filter_options": zod.array(zod.object({
+  "id": zod.enum(['all', 'other_schools', 'other_majors', 'shared_interests', 'similar_goals']),
+  "available": zod.boolean().describe('False when the visitor profile lacks the fact this filter compares'),
+  "count": zod.number().int().min(updateCrossoverProfileResponseFilterOptionsItemCountMin).describe('Cards in this deck that match'),
+  "remaining": zod.number().int().min(updateCrossoverProfileResponseFilterOptionsItemRemainingMin).describe('Matching cards not yet swiped')
+}))
 })
 
 
@@ -342,6 +463,10 @@ export const confirmCrossoverProfileResponseSuperConnectsLeftMax = 3;
 
 export const confirmCrossoverProfileResponseDeckSummaryConnectionsMadeMin = 0;
 
+export const confirmCrossoverProfileResponseFilterOptionsItemCountMin = 0;
+
+export const confirmCrossoverProfileResponseFilterOptionsItemRemainingMin = 0;
+
 
 
 export const ConfirmCrossoverProfileResponse = zod.object({
@@ -391,7 +516,145 @@ export const ConfirmCrossoverProfileResponse = zod.object({
   "deck_summary": zod.object({
   "connections_made": zod.number().int().min(confirmCrossoverProfileResponseDeckSummaryConnectionsMadeMin),
   "top_shared_interest": zod.string().nullable()
+}),
+  "deck_filter": zod.enum(['all', 'other_schools', 'other_majors', 'shared_interests', 'similar_goals']),
+  "visible_order": zod.array(zod.number().int()).describe('deck_order narrowed by deck_filter, same relative order'),
+  "filter_options": zod.array(zod.object({
+  "id": zod.enum(['all', 'other_schools', 'other_majors', 'shared_interests', 'similar_goals']),
+  "available": zod.boolean().describe('False when the visitor profile lacks the fact this filter compares'),
+  "count": zod.number().int().min(confirmCrossoverProfileResponseFilterOptionsItemCountMin).describe('Cards in this deck that match'),
+  "remaining": zod.number().int().min(confirmCrossoverProfileResponseFilterOptionsItemRemainingMin).describe('Matching cards not yet swiped')
+}))
 })
+
+
+/**
+ * @summary Narrow the current deck to a subset without AI; order and progress are preserved
+ */
+
+
+
+export const SetCrossoverDeckFilterBody = zod.object({
+  "deck_id": zod.string().min(1),
+  "filter": zod.enum(['all', 'other_schools', 'other_majors', 'shared_interests', 'similar_goals'])
+})
+
+export const setCrossoverDeckFilterResponseRemainingBuildsMin = 0;
+export const setCrossoverDeckFilterResponseRemainingBuildsMax = 5;
+
+export const setCrossoverDeckFilterResponseDeckOneVisitorProfileOneFirstNameMax = 100;
+
+export const setCrossoverDeckFilterResponseDeckOneVisitorProfileOneSchoolMax = 150;
+
+export const setCrossoverDeckFilterResponseDeckOneVisitorProfileOneMajorMax = 150;
+
+export const setCrossoverDeckFilterResponseDeckOneVisitorProfileOneYearMax = 100;
+
+export const setCrossoverDeckFilterResponseDeckOneVisitorProfileOneCareerGoalsMax = 600;
+
+export const setCrossoverDeckFilterResponseDeckOneVisitorProfileOneInterestsItemMax = 100;
+
+export const setCrossoverDeckFilterResponseDeckOneVisitorProfileOneInterestsMax = 12;
+
+
+export const setCrossoverDeckFilterResponseDeckOneMatchesItemMatchScoreMin = 0;
+export const setCrossoverDeckFilterResponseDeckOneMatchesItemMatchScoreMax = 100;
+
+export const setCrossoverDeckFilterResponseDeckOneMatchesItemWhyConnectMin = 10;
+export const setCrossoverDeckFilterResponseDeckOneMatchesItemWhyConnectMax = 500;
+
+export const setCrossoverDeckFilterResponseDeckOneMatchesItemIcebreakerMax = 299;
+
+export const setCrossoverDeckFilterResponseDeckOneMatchesMax = 10;
+
+export const setCrossoverDeckFilterResponseDeckOneCareerTipOneFieldMax = 150;
+
+export const setCrossoverDeckFilterResponseDeckOneCareerTipOneReasonMax = 500;
+
+
+export const setCrossoverDeckFilterResponseDeckOneReasonMax = 500;
+
+export const setCrossoverDeckFilterResponseVisitorProfileOneFirstNameMax = 100;
+
+export const setCrossoverDeckFilterResponseVisitorProfileOneSchoolMax = 150;
+
+export const setCrossoverDeckFilterResponseVisitorProfileOneMajorMax = 150;
+
+export const setCrossoverDeckFilterResponseVisitorProfileOneYearMax = 100;
+
+export const setCrossoverDeckFilterResponseVisitorProfileOneCareerGoalsMax = 600;
+
+export const setCrossoverDeckFilterResponseVisitorProfileOneInterestsItemMax = 100;
+
+export const setCrossoverDeckFilterResponseVisitorProfileOneInterestsMax = 12;
+
+export const setCrossoverDeckFilterResponseSuperConnectsLeftMin = 0;
+export const setCrossoverDeckFilterResponseSuperConnectsLeftMax = 3;
+
+export const setCrossoverDeckFilterResponseDeckSummaryConnectionsMadeMin = 0;
+
+export const setCrossoverDeckFilterResponseFilterOptionsItemCountMin = 0;
+
+export const setCrossoverDeckFilterResponseFilterOptionsItemRemainingMin = 0;
+
+
+
+export const SetCrossoverDeckFilterResponse = zod.object({
+  "input_text": zod.string(),
+  "remaining_builds": zod.number().int().min(setCrossoverDeckFilterResponseRemainingBuildsMin).max(setCrossoverDeckFilterResponseRemainingBuildsMax),
+  "deck_id": zod.string().nullable(),
+  "deck": zod.union([zod.object({
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(setCrossoverDeckFilterResponseDeckOneVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(setCrossoverDeckFilterResponseDeckOneVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(setCrossoverDeckFilterResponseDeckOneVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(setCrossoverDeckFilterResponseDeckOneVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(setCrossoverDeckFilterResponseDeckOneVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(setCrossoverDeckFilterResponseDeckOneVisitorProfileOneInterestsItemMax)).max(setCrossoverDeckFilterResponseDeckOneVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "matches": zod.array(zod.object({
+  "profile_id": zod.number().int().min(1),
+  "match_score": zod.number().int().min(setCrossoverDeckFilterResponseDeckOneMatchesItemMatchScoreMin).max(setCrossoverDeckFilterResponseDeckOneMatchesItemMatchScoreMax),
+  "why_connect": zod.string().min(setCrossoverDeckFilterResponseDeckOneMatchesItemWhyConnectMin).max(setCrossoverDeckFilterResponseDeckOneMatchesItemWhyConnectMax),
+  "icebreaker": zod.string().min(1).max(setCrossoverDeckFilterResponseDeckOneMatchesItemIcebreakerMax)
+})).max(setCrossoverDeckFilterResponseDeckOneMatchesMax),
+  "career_tip": zod.union([zod.object({
+  "field": zod.string().min(1).max(setCrossoverDeckFilterResponseDeckOneCareerTipOneFieldMax),
+  "reason": zod.string().min(1).max(setCrossoverDeckFilterResponseDeckOneCareerTipOneReasonMax),
+  "profile_id": zod.number().int().min(1)
+}),zod.null()]),
+  "insufficient_input": zod.boolean(),
+  "reason": zod.string().max(setCrossoverDeckFilterResponseDeckOneReasonMax).nullable()
+}),zod.null()]),
+  "visitor_profile": zod.union([zod.object({
+  "first_name": zod.string().max(setCrossoverDeckFilterResponseVisitorProfileOneFirstNameMax).nullable(),
+  "school": zod.string().max(setCrossoverDeckFilterResponseVisitorProfileOneSchoolMax).nullable(),
+  "major": zod.string().max(setCrossoverDeckFilterResponseVisitorProfileOneMajorMax).nullable(),
+  "year": zod.string().max(setCrossoverDeckFilterResponseVisitorProfileOneYearMax).nullable(),
+  "career_goals": zod.string().max(setCrossoverDeckFilterResponseVisitorProfileOneCareerGoalsMax),
+  "interests": zod.array(zod.string().max(setCrossoverDeckFilterResponseVisitorProfileOneInterestsItemMax)).max(setCrossoverDeckFilterResponseVisitorProfileOneInterestsMax)
+}),zod.null()]),
+  "profile_confirmed": zod.boolean(),
+  "deck_order": zod.array(zod.number().int()),
+  "swipes": zod.array(zod.object({
+  "id": zod.number().int(),
+  "profile_id": zod.number().int(),
+  "direction": zod.enum(['left', 'right', 'super']),
+  "created_at": zod.string()
+})),
+  "super_connects_left": zod.number().int().min(setCrossoverDeckFilterResponseSuperConnectsLeftMin).max(setCrossoverDeckFilterResponseSuperConnectsLeftMax),
+  "deck_summary": zod.object({
+  "connections_made": zod.number().int().min(setCrossoverDeckFilterResponseDeckSummaryConnectionsMadeMin),
+  "top_shared_interest": zod.string().nullable()
+}),
+  "deck_filter": zod.enum(['all', 'other_schools', 'other_majors', 'shared_interests', 'similar_goals']),
+  "visible_order": zod.array(zod.number().int()).describe('deck_order narrowed by deck_filter, same relative order'),
+  "filter_options": zod.array(zod.object({
+  "id": zod.enum(['all', 'other_schools', 'other_majors', 'shared_interests', 'similar_goals']),
+  "available": zod.boolean().describe('False when the visitor profile lacks the fact this filter compares'),
+  "count": zod.number().int().min(setCrossoverDeckFilterResponseFilterOptionsItemCountMin).describe('Cards in this deck that match'),
+  "remaining": zod.number().int().min(setCrossoverDeckFilterResponseFilterOptionsItemRemainingMin).describe('Matching cards not yet swiped')
+}))
 })
 
 
@@ -462,6 +725,10 @@ export const createCrossoverSwipeResponseSuperConnectsLeftMax = 3;
 
 export const createCrossoverSwipeResponseDeckSummaryConnectionsMadeMin = 0;
 
+export const createCrossoverSwipeResponseFilterOptionsItemCountMin = 0;
+
+export const createCrossoverSwipeResponseFilterOptionsItemRemainingMin = 0;
+
 
 
 export const CreateCrossoverSwipeResponse = zod.object({
@@ -511,7 +778,15 @@ export const CreateCrossoverSwipeResponse = zod.object({
   "deck_summary": zod.object({
   "connections_made": zod.number().int().min(createCrossoverSwipeResponseDeckSummaryConnectionsMadeMin),
   "top_shared_interest": zod.string().nullable()
-})
+}),
+  "deck_filter": zod.enum(['all', 'other_schools', 'other_majors', 'shared_interests', 'similar_goals']),
+  "visible_order": zod.array(zod.number().int()).describe('deck_order narrowed by deck_filter, same relative order'),
+  "filter_options": zod.array(zod.object({
+  "id": zod.enum(['all', 'other_schools', 'other_majors', 'shared_interests', 'similar_goals']),
+  "available": zod.boolean().describe('False when the visitor profile lacks the fact this filter compares'),
+  "count": zod.number().int().min(createCrossoverSwipeResponseFilterOptionsItemCountMin).describe('Cards in this deck that match'),
+  "remaining": zod.number().int().min(createCrossoverSwipeResponseFilterOptionsItemRemainingMin).describe('Matching cards not yet swiped')
+}))
 })
 
 
@@ -581,6 +856,10 @@ export const undoCrossoverSwipeResponseSuperConnectsLeftMax = 3;
 
 export const undoCrossoverSwipeResponseDeckSummaryConnectionsMadeMin = 0;
 
+export const undoCrossoverSwipeResponseFilterOptionsItemCountMin = 0;
+
+export const undoCrossoverSwipeResponseFilterOptionsItemRemainingMin = 0;
+
 
 
 export const UndoCrossoverSwipeResponse = zod.object({
@@ -630,7 +909,15 @@ export const UndoCrossoverSwipeResponse = zod.object({
   "deck_summary": zod.object({
   "connections_made": zod.number().int().min(undoCrossoverSwipeResponseDeckSummaryConnectionsMadeMin),
   "top_shared_interest": zod.string().nullable()
-})
+}),
+  "deck_filter": zod.enum(['all', 'other_schools', 'other_majors', 'shared_interests', 'similar_goals']),
+  "visible_order": zod.array(zod.number().int()).describe('deck_order narrowed by deck_filter, same relative order'),
+  "filter_options": zod.array(zod.object({
+  "id": zod.enum(['all', 'other_schools', 'other_majors', 'shared_interests', 'similar_goals']),
+  "available": zod.boolean().describe('False when the visitor profile lacks the fact this filter compares'),
+  "count": zod.number().int().min(undoCrossoverSwipeResponseFilterOptionsItemCountMin).describe('Cards in this deck that match'),
+  "remaining": zod.number().int().min(undoCrossoverSwipeResponseFilterOptionsItemRemainingMin).describe('Matching cards not yet swiped')
+}))
 })
 
 
@@ -796,6 +1083,10 @@ export const getCrossoverStateResponseSuperConnectsLeftMax = 3;
 
 export const getCrossoverStateResponseDeckSummaryConnectionsMadeMin = 0;
 
+export const getCrossoverStateResponseFilterOptionsItemCountMin = 0;
+
+export const getCrossoverStateResponseFilterOptionsItemRemainingMin = 0;
+
 
 
 export const GetCrossoverStateResponse = zod.object({
@@ -845,7 +1136,15 @@ export const GetCrossoverStateResponse = zod.object({
   "deck_summary": zod.object({
   "connections_made": zod.number().int().min(getCrossoverStateResponseDeckSummaryConnectionsMadeMin),
   "top_shared_interest": zod.string().nullable()
-})
+}),
+  "deck_filter": zod.enum(['all', 'other_schools', 'other_majors', 'shared_interests', 'similar_goals']),
+  "visible_order": zod.array(zod.number().int()).describe('deck_order narrowed by deck_filter, same relative order'),
+  "filter_options": zod.array(zod.object({
+  "id": zod.enum(['all', 'other_schools', 'other_majors', 'shared_interests', 'similar_goals']),
+  "available": zod.boolean().describe('False when the visitor profile lacks the fact this filter compares'),
+  "count": zod.number().int().min(getCrossoverStateResponseFilterOptionsItemCountMin).describe('Cards in this deck that match'),
+  "remaining": zod.number().int().min(getCrossoverStateResponseFilterOptionsItemRemainingMin).describe('Matching cards not yet swiped')
+}))
 })
 
 

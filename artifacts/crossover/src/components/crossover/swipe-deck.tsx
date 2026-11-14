@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { animate, motion, useMotionValue, useReducedMotion, useTransform, type PanInfo } from 'framer-motion';
-import { X, Star, Heart, Undo2, Compass, UserRound, PenLine } from 'lucide-react';
-import type { SampleProfile, VisitorState } from '@workspace/api-client-react';
+import { X, Star, Heart, Undo2, Compass, UserRound, PenLine, Filter } from 'lucide-react';
+import type { DeckFilter, SampleProfile, VisitorState } from '@workspace/api-client-react';
 import { MatchCard } from '@/components/crossover/match-card';
 import { DeckComplete } from '@/components/crossover/deck-complete';
+import { DeckFilterBar, FILTER_LABELS } from '@/components/crossover/deck-filter-bar';
 
 type Dir = 'left' | 'right' | 'super';
 
 export function SwipeDeck({
-  state, profiles, onSwipe, onUndo, pending, error, onEditProfile, onEditInput,
+  state, profiles, onSwipe, onUndo, onFilter, pending, error, onEditProfile, onEditInput,
 }: {
   state: VisitorState; profiles: SampleProfile[]; onSwipe: (id: number, d: Dir) => Promise<boolean>;
-  onUndo: () => void; pending: boolean; error: string | null; onEditProfile: () => void; onEditInput: () => void;
+  onUndo: () => void; onFilter: (f: DeckFilter) => void; pending: boolean; error: string | null;
+  onEditProfile: () => void; onEditInput: () => void;
 }) {
   const reduce = useReducedMotion();
   const x = useMotionValue(0);
@@ -23,12 +25,16 @@ export function SwipeDeck({
   const [busy, setBusy] = useState(false);
 
   const swiped = useMemo(() => new Set(state.swipes.map((s) => s.profile_id)), [state.swipes]);
-  const order = state.deck_order;
+  // The server narrows the deck; swipes outside the filter keep their place.
+  const filtered = state.deck_filter !== 'all';
+  const order = filtered || state.visible_order.length ? state.visible_order : state.deck_order;
   const currentId = order.find((id) => !swiped.has(id));
   const position = order.findIndex((id) => id === currentId);
   const byId = useMemo(() => new Map(profiles.map((p) => [p.id, p])), [profiles]);
   const current = currentId != null ? byId.get(currentId) : undefined;
-  const nextP = position >= 0 && order[position + 1] != null ? byId.get(order[position + 1]) : undefined;
+  const nextId = position >= 0 ? order.slice(position + 1).find((id) => !swiped.has(id)) : undefined;
+  const nextP = nextId != null ? byId.get(nextId) : undefined;
+  const hiddenLeft = state.deck_order.filter((id) => !swiped.has(id)).length;
   const match = state.deck?.matches.find((m) => m.profile_id === currentId);
   const tip = state.deck?.career_tip ?? null;
   const wildcard = !!tip && tip.profile_id === currentId;
@@ -36,7 +42,7 @@ export function SwipeDeck({
     () => new Set((state.visitor_profile?.interests ?? []).map((t) => t.toLowerCase())),
     [state.visitor_profile],
   );
-  const reviewed = state.swipes.length;
+  const reviewed = order.filter((id) => swiped.has(id)).length;
   const total = order.length;
   const locked = busy || pending;
 
@@ -49,8 +55,10 @@ export function SwipeDeck({
     const tx = d === 'left' ? -520 : d === 'right' ? 520 : 0;
     const ty = d === 'super' ? -620 : 0;
     const out = reduce ? { duration: 0 } : { duration: 0.28, ease: [0.4, 0, 0.2, 1] as const };
-    animate(x, tx, out);
-    await animate(y, ty, out);
+    // Await BOTH axes: a right swipe's y animation is 0 -> 0 and resolves
+    // instantly, and a fast response would otherwise leave the next card
+    // stranded off-screen when the still-running x animation finishes.
+    await Promise.all([animate(x, tx, out), animate(y, ty, out)]);
     const ok = await onSwipe(currentId, d);
     if (!ok) {
       const spring = reduce ? { duration: 0 } : { type: 'spring' as const, stiffness: 420, damping: 28 };
@@ -91,15 +99,19 @@ export function SwipeDeck({
   return (
     <section className="rise pt-4" aria-label="Your deck">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold" data-testid="text-progress">{Math.min(reviewed + (current ? 1 : 0), total)} of {total}</p>
+        <p className="text-sm font-semibold" data-testid="text-progress">
+          {Math.min(reviewed + (current ? 1 : 0), total)} of {total}
+          {filtered && <span className="sr-only"> in {FILTER_LABELS[state.deck_filter]}</span>}
+        </p>
         <div className="flex gap-1">
           <button type="button" onClick={onEditProfile} data-testid="button-open-profile" className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground"><UserRound className="h-3.5 w-3.5" aria-hidden />My card</button>
           <button type="button" onClick={onEditInput} data-testid="button-open-input" className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground"><PenLine className="h-3.5 w-3.5" aria-hidden />Edit input</button>
         </div>
       </div>
       <div className="mt-2 flex gap-1" aria-hidden>
-        {order.map((id, i) => <span key={id} className={`h-1 flex-1 rounded-full transition-colors ${i < reviewed ? 'grad-accent' : i === reviewed ? 'bg-foreground/60' : 'bg-muted'}`} />)}
+        {order.map((id) => <span key={id} className={`h-1 flex-1 rounded-full transition-colors ${swiped.has(id) ? 'grad-accent' : id === currentId ? 'bg-foreground/60' : 'bg-muted'}`} />)}
       </div>
+      <DeckFilterBar active={state.deck_filter} options={state.filter_options} disabled={locked} onChange={onFilter} />
 
       {current ? (
         <>
@@ -149,6 +161,19 @@ export function SwipeDeck({
             <span className="hidden sm:inline">Arrow keys: left pass, right connect, up super</span>
           </div>
         </>
+      ) : filtered && hiddenLeft > 0 ? (
+        <div className="rise mt-6 rounded-[28px] border border-card-border bg-card p-6 text-center" data-testid="status-filter-complete">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-secondary"><Filter className="h-5 w-5" aria-hidden /></div>
+          <h2 className="mt-3 text-xl font-extrabold">You've seen everyone in {FILTER_LABELS[state.deck_filter]}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{hiddenLeft} more {hiddenLeft === 1 ? 'person is' : 'people are'} waiting in your full deck.</p>
+          {error && <p role="alert" className="mt-3 rounded-2xl bg-[hsl(352_85%_62%/.14)] p-3 text-sm text-[hsl(352_90%_82%)]">{error}</p>}
+          <div className="mt-5 grid gap-2">
+            <button type="button" onClick={() => onFilter('all')} disabled={locked} data-testid="button-filter-show-all"
+              className="grad-accent rounded-full py-3 text-sm font-bold text-[hsl(250_30%_8%)] transition-transform active:scale-[.98] disabled:opacity-50">Show all cards ({hiddenLeft} left)</button>
+            <button type="button" onClick={onUndo} disabled={!last || locked} data-testid="button-undo"
+              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-border py-2.5 text-sm font-semibold disabled:opacity-50"><Undo2 className="h-4 w-4" aria-hidden />Undo</button>
+          </div>
+        </div>
       ) : (
         <DeckComplete summary={state.deck_summary} remaining={state.remaining_builds} error={error}
           canUndo={!!last && !locked} onUndo={onUndo} onNewDeck={onEditInput} />

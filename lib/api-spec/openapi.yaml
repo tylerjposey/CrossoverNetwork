@@ -45,6 +45,32 @@ paths:
           $ref: "#/components/responses/DeckActionError"
         "409":
           $ref: "#/components/responses/DeckActionError"
+  /crossover/connections/{id}/reply:
+    post:
+      operationId: simulateCrossoverReply
+      summary: Get a simulated reply from the fictional sample person; uses the shared AI quotas only when a new reply is generated
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: integer, minimum: 1}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ReplyInput"}
+      responses:
+        "200":
+          description: Saved simulated reply (existing replies are returned without AI unless regenerate is true)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ReplyResult"}
+        "400":
+          $ref: "#/components/responses/FriendlyError"
+        "429":
+          $ref: "#/components/responses/FriendlyError"
+        "503":
+          $ref: "#/components/responses/FriendlyError"
   /crossover/profile:
     patch:
       operationId: updateCrossoverProfile
@@ -70,6 +96,22 @@ paths:
         content:
           application/json:
             schema: {$ref: "#/components/schemas/DeckReference"}
+      responses:
+        "200":
+          $ref: "#/components/responses/SessionState"
+        "400":
+          $ref: "#/components/responses/DeckActionError"
+        "409":
+          $ref: "#/components/responses/DeckActionError"
+  /crossover/deck/filter:
+    post:
+      operationId: setCrossoverDeckFilter
+      summary: Narrow the current deck to a subset without AI; order and progress are preserved
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/DeckFilterInput"}
       responses:
         "200":
           $ref: "#/components/responses/SessionState"
@@ -224,9 +266,53 @@ components:
       required: [icebreaker]
       properties:
         icebreaker: {type: string, minLength: 1, maxLength: 299}
+    DeckFilter:
+      type: string
+      enum: [all, other_schools, other_majors, shared_interests, similar_goals]
+    DeckFilterInput:
+      type: object
+      additionalProperties: false
+      required: [deck_id, filter]
+      properties:
+        deck_id: {type: string, minLength: 1}
+        filter: {$ref: "#/components/schemas/DeckFilter"}
+    DeckFilterOption:
+      type: object
+      required: [id, available, count, remaining]
+      properties:
+        id: {$ref: "#/components/schemas/DeckFilter"}
+        available: {type: boolean, description: False when the visitor profile lacks the fact this filter compares}
+        count: {type: integer, minimum: 0, description: Cards in this deck that match}
+        remaining: {type: integer, minimum: 0, description: Matching cards not yet swiped}
+    ReplyInput:
+      type: object
+      additionalProperties: false
+      properties:
+        regenerate: {type: boolean, description: Spend one shared AI call to replace an existing reply}
+    SimulatedReply:
+      type: object
+      required: [text, replied_to, created_at]
+      properties:
+        text: {type: string, minLength: 1, maxLength: 280, description: AI-written in the voice of a fictional sample profile; never a real person}
+        replied_to: {type: string, description: The saved icebreaker this reply answers}
+        created_at: {type: string}
+    ReplyResult:
+      type: object
+      required: [connection, remaining_builds, reused]
+      properties:
+        connection: {$ref: "#/components/schemas/Connection"}
+        remaining_builds: {type: integer, minimum: 0, maximum: 5}
+        reused: {type: boolean, description: True when an existing reply was returned without an AI call}
+    NextStep:
+      type: object
+      required: [kind, title, text]
+      properties:
+        kind: {type: string, enum: [coffee_chat, shared_interest, ask_about]}
+        title: {type: string}
+        text: {type: string}
     Connection:
       type: object
-      required: [id, deck_id, profile, visitor_profile, match_score, why_connect, icebreaker, direction, created_at]
+      required: [id, deck_id, profile, visitor_profile, match_score, why_connect, icebreaker, direction, created_at, next_step, reply]
       properties:
         id: {type: integer}
         deck_id: {type: string}
@@ -240,6 +326,16 @@ components:
         icebreaker: {type: string, maxLength: 299}
         direction: {type: string, enum: [right, super]}
         created_at: {type: string}
+        next_step:
+          description: Deterministic suggestion derived from saved match data; never AI-generated
+          anyOf:
+            - {$ref: "#/components/schemas/NextStep"}
+            - {type: "null"}
+        reply:
+          description: Persisted simulated sample reply, or null before one is requested
+          anyOf:
+            - {$ref: "#/components/schemas/SimulatedReply"}
+            - {type: "null"}
     ConnectionList:
       type: object
       required: [connections, remaining_builds]
@@ -377,7 +473,7 @@ components:
         connection_id: {type: [integer, "null"]}
     VisitorState:
       type: object
-      required: [input_text, remaining_builds, deck_id, deck, visitor_profile, profile_confirmed, deck_order, swipes, super_connects_left, deck_summary]
+      required: [input_text, remaining_builds, deck_id, deck, visitor_profile, profile_confirmed, deck_order, swipes, super_connects_left, deck_summary, deck_filter, visible_order, filter_options]
       properties:
         input_text: {type: string}
         remaining_builds: {type: integer, minimum: 0, maximum: 5}
@@ -399,6 +495,14 @@ components:
           items: {$ref: "#/components/schemas/SavedSwipe"}
         super_connects_left: {type: integer, minimum: 0, maximum: 3}
         deck_summary: {$ref: "#/components/schemas/DeckSummary"}
+        deck_filter: {$ref: "#/components/schemas/DeckFilter"}
+        visible_order:
+          description: deck_order narrowed by deck_filter, same relative order
+          type: array
+          items: {type: integer}
+        filter_options:
+          type: array
+          items: {$ref: "#/components/schemas/DeckFilterOption"}
     ActionError:
       type: object
       required: [error, code, remaining_builds]

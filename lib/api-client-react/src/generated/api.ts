@@ -24,6 +24,7 @@ import type {
   ConnectionList,
   DeckActionErrorResponse,
   DeckBuild,
+  DeckFilterInput,
   DeckInput,
   DeckReference,
   FriendlyErrorResponse,
@@ -33,6 +34,8 @@ import type {
   IcebreakerEdit,
   IcebreakerInput,
   ProfileEdit,
+  ReplyInput,
+  ReplyResult,
   SampleProfile,
   SessionStateResponse,
   SwipeInput,
@@ -233,6 +236,95 @@ export const useEditCrossoverIcebreaker = <TError = ErrorType<DeckActionErrorRes
       return useMutation(getEditCrossoverIcebreakerMutationOptions(options));
     }
 
+export const getSimulateCrossoverReplyUrl = (id: number,) => {
+
+
+
+
+  return `/api/crossover/connections/${id}/reply`
+}
+
+/**
+ * @summary Get a simulated reply from the fictional sample person; uses the shared AI quotas only when a new reply is generated
+ */
+export const simulateCrossoverReply = async (id: number,
+    replyInput: ReplyInput, options?: Parameters<typeof customFetch>[1]): Promise<ReplyResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ReplyResult>(getSimulateCrossoverReplyUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(replyInput)
+  }
+);}
+
+
+
+
+
+export const getSimulateCrossoverReplyMutationKey = () => ['simulateCrossoverReply'] as const;
+
+export const getSimulateCrossoverReplyMutationOptions = <TError = ErrorType<FriendlyErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof simulateCrossoverReply>>, TError,SimulateCrossoverReplyMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof simulateCrossoverReply>>, TError,SimulateCrossoverReplyMutationVariables, TContext> => {
+
+const mutationKey = getSimulateCrossoverReplyMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof simulateCrossoverReply>>, SimulateCrossoverReplyMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  simulateCrossoverReply(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SimulateCrossoverReplyMutationResult = NonNullable<Awaited<ReturnType<typeof simulateCrossoverReply>>>
+    export type SimulateCrossoverReplyMutationBody = BodyType<ReplyInput>
+    export type SimulateCrossoverReplyMutationError = ErrorType<FriendlyErrorResponse>
+    export type SimulateCrossoverReplyMutationVariables = {id: number;data: BodyType<ReplyInput>}
+
+    /**
+ * @summary Get a simulated reply from the fictional sample person; uses the shared AI quotas only when a new reply is generated
+ */
+export const useSimulateCrossoverReply = <TError = ErrorType<FriendlyErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof simulateCrossoverReply>>, TError,SimulateCrossoverReplyMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof simulateCrossoverReply>>,
+        TError,
+        SimulateCrossoverReplyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSimulateCrossoverReplyMutationOptions(options));
+    }
+
 export const getUpdateCrossoverProfileUrl = () => {
 
 
@@ -407,6 +499,94 @@ export const useConfirmCrossoverProfile = <TError = ErrorType<DeckActionErrorRes
         TContext
       > => {
       return useMutation(getConfirmCrossoverProfileMutationOptions(options));
+    }
+
+export const getSetCrossoverDeckFilterUrl = () => {
+
+
+
+
+  return `/api/crossover/deck/filter`
+}
+
+/**
+ * @summary Narrow the current deck to a subset without AI; order and progress are preserved
+ */
+export const setCrossoverDeckFilter = async (deckFilterInput: DeckFilterInput, options?: Parameters<typeof customFetch>[1]): Promise<SessionStateResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SessionStateResponse>(getSetCrossoverDeckFilterUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(deckFilterInput)
+  }
+);}
+
+
+
+
+
+export const getSetCrossoverDeckFilterMutationKey = () => ['setCrossoverDeckFilter'] as const;
+
+export const getSetCrossoverDeckFilterMutationOptions = <TError = ErrorType<DeckActionErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCrossoverDeckFilter>>, TError,SetCrossoverDeckFilterMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setCrossoverDeckFilter>>, TError,SetCrossoverDeckFilterMutationVariables, TContext> => {
+
+const mutationKey = getSetCrossoverDeckFilterMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setCrossoverDeckFilter>>, SetCrossoverDeckFilterMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  setCrossoverDeckFilter(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetCrossoverDeckFilterMutationResult = NonNullable<Awaited<ReturnType<typeof setCrossoverDeckFilter>>>
+    export type SetCrossoverDeckFilterMutationBody = BodyType<DeckFilterInput>
+    export type SetCrossoverDeckFilterMutationError = ErrorType<DeckActionErrorResponse>
+    export type SetCrossoverDeckFilterMutationVariables = {data: BodyType<DeckFilterInput>}
+
+    /**
+ * @summary Narrow the current deck to a subset without AI; order and progress are preserved
+ */
+export const useSetCrossoverDeckFilter = <TError = ErrorType<DeckActionErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCrossoverDeckFilter>>, TError,SetCrossoverDeckFilterMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setCrossoverDeckFilter>>,
+        TError,
+        SetCrossoverDeckFilterMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetCrossoverDeckFilterMutationOptions(options));
     }
 
 export const getCreateCrossoverSwipeUrl = () => {
